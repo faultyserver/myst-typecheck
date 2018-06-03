@@ -1,4 +1,5 @@
-require "../myst/src/myst.cr"
+require "myst"
+
 require "./visitor.cr"
 
 program = Myst::Parser.for_content(%q(

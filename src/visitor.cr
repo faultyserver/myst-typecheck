@@ -1,5 +1,4 @@
-require "./visitor/*"
-require "./typechecking/*"
+require "./typecheck/*"
 
 module Myst
   module TypeCheck

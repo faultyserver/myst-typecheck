@@ -1,0 +1,7 @@
+/.shards/
+/lib/
+
+/shard.lock
+
+*.dwarf
+myst-typecheck

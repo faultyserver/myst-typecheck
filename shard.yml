@@ -1,0 +1,15 @@
+name: myst-typecheck
+version: 0.0.1
+crystal: 0.24.2
+license: MIT
+authors:
+  - Jon Egeland <jonegeland@gmail.com>
+
+targets:
+  myst-typecheck:
+    main: src/typecheck.cr
+
+dependencies:
+  myst:
+    github: faultyserver/myst
+    commit: c286e01
