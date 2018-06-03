@@ -17,12 +17,18 @@ module Myst
           io << name << ":\n"
           io << "  instance_methods:\n"
           instance_methods.each do |im|
-            io << "    " << im.inspect(io)
+            io << "    "
+            im.inspect(io)
+            io << "\n"
           end
+          io << "\n"
           io << "  static_methods:\n"
           static_methods.each do |sm|
-            io << "    " << sm.inspect(io)
+            io << "    "
+            sm.inspect(io)
+            io << "\n"
           end
+          io << "\n"
         end
       end
 
@@ -35,14 +41,27 @@ module Myst
 
         def initialize(@name : String, @inputs = [] of Type, @output : Type = OBJECT)
         end
+
+        def inspect(io : IO)
+          io << name << "("
+          io << inputs.map(&.name).join(", ")
+          io << ") : "
+          io << output.name
+        end
       end
 
 
       property types : Hash(String, Type)
+      property self_stack : Array(Type)
 
 
       def initialize
         @types = {} of String => Type
+        @self_stack = [] of Type
+      end
+
+      def current_self
+        @self_stack.last
       end
 
       def visit(node : Node)
@@ -50,9 +69,32 @@ module Myst
       end
 
       def visit(node : TypeDef)
-        return if types[node.name]?
+        typ = types[node.name]? || (types[node.name] = Type.new(node.name))
+        @self_stack.push(typ)
 
-        types[node.name] = Type.new(node.name)
+        node.accept_children(self)
+      end
+
+      def visit(node : Def)
+        container =
+          node.static? ?
+            current_self.static_methods :
+            current_self.instance_methods
+
+
+        inputs = [] of Type
+
+        node.params.each do |p|
+          param_type =
+            if p.restriction?
+              visit()
+            else
+              OBJECT
+            end
+          inputs.push(param_type)
+        end
+
+        container.push(Method.new(node.name))
       end
     end
   end
