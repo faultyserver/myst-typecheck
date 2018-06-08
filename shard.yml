@@ -12,4 +12,4 @@ targets:
 dependencies:
   myst:
     github: faultyserver/myst
-    commit: c286e01
+    commit: 29c31a9

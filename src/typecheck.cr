@@ -3,27 +3,15 @@ require "myst"
 require "./visitor.cr"
 
 program = Myst::Parser.for_content(%q(
-  deftype Nil
-    def truthy?
-      false
-    end
-    def ==(other)
-      false
-    end
+  deftype Integer
+    def +(other : Integer) : Integer; end
+    def +(other : Float) : Float; end
   end
 
-  deftype Boolean; end
-  deftype Integer; end
-  deftype Float; end
-  deftype String; end
-  deftype Symbol; end
-  deftype Type; end
-  deftype Module; end
+  x = 2 + 3.0
 )).parse
 
 typechecker = Myst::TypeCheck::Visitor.new
 typechecker.visit(program)
 
-typechecker.types.values.each do |t|
-  puts t
-end
+puts typechecker.current_scope["x"]
