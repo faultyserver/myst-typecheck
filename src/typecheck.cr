@@ -8,10 +8,17 @@ program = Myst::Parser.for_content(%q(
     def +(other : Float) : Float; end
   end
 
-  x = 2 + 3.0
+  deftype Float
+    def +(other : Integer) : Float; end
+    def +(other : Float) : Float; end
+  end
+
+  x = 2.0 + 3
+  y = 1 + 2.0
+  z = x + y
 )).parse
 
 typechecker = Myst::TypeCheck::Visitor.new
 typechecker.visit(program)
 
-puts typechecker.current_scope["x"]
+puts typechecker.current_scope["z"]

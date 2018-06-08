@@ -77,6 +77,10 @@ module Myst
         current_scope[node.name]
       end
 
+      def visit(node : Var)
+        current_scope[node.name]
+      end
+
       def visit(node : Call)
         this =
           if node.receiver?
