@@ -67,19 +67,17 @@ module Myst
       end
 
       def visit(node : SimpleAssign)
-        left = node.target.as(Var)
+        left = node.target.as(StaticAssignable)
         value_type = visit(node.value)
         current_scope[left.name] = value_type
         return value_type
       end
 
-      def visit(node : Const)
+      # def visit(node : Const | Var | Underscore)
+      def visit(node : StaticAssignable)
         current_scope[node.name]
       end
 
-      def visit(node : Var)
-        current_scope[node.name]
-      end
 
       def visit(node : Call)
         this =
