@@ -85,6 +85,10 @@ module Myst
         current_scope[node.name]
       end
 
+      def visit(node : When | Unless)
+        visit(node.body).union_with(visit(node.alternative))
+      end
+
 
       def visit(node : Call)
         this =

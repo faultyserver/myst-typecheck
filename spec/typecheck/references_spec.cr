@@ -12,7 +12,7 @@ describe "References" do
     it "returns the last-assigned type of `#{ref}`" do
       typecheck(%Q(
         #{ref} = 2
-        #{ref}.
+        #{ref}
       ))
     end
   end
