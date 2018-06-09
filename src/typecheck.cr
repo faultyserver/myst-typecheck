@@ -13,12 +13,24 @@ program = Myst::Parser.for_content(%q(
     def +(other : Float) : Float; end
   end
 
-  x = 2.0 + 3
-  y = 1 + 2.0
-  z = x + y
+
+  def infer_return
+    x = 2.0 + 3
+    y = 1 + 2.0
+    z = x + y
+  end
+
+  def infer_return(a : Integer)
+    "no"
+  end
+
+  a = infer_return
+  b = infer_return(1)
 )).parse
 
 typechecker = Myst::TypeCheck::Visitor.new
 typechecker.visit(program)
 
-puts typechecker.current_scope["z"]
+typechecker.current_scope.each do |name, type|
+  puts "#{name} : #{type}"
+end

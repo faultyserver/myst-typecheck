@@ -7,24 +7,25 @@ module Myst
       property self_stack : Array(Type)
 
       def initialize
-        @scope_stack = [Scope.new]
-        @self_stack = [] of Type
-        init_primitives
+        @scope_stack = [create_root_scope]
+        @self_stack = [Type.new("main")] of Type
       end
 
-      def init_primitives
-        current_scope["Object"]  = Type.new("Object")
-        current_scope["Nil"]     = Type.new("Nil")
-        current_scope["Boolean"] = Type.new("Boolean")
-        current_scope["Integer"] = Type.new("Integer")
-        current_scope["Float"]   = Type.new("Float")
-        current_scope["String"]  = Type.new("String")
-        current_scope["Symbol"]  = Type.new("Symbol")
-        current_scope["List"]    = Type.new("List")
-        current_scope["Map"]     = Type.new("Map")
-        current_scope["Type"]    = Type.new("Type")
-        current_scope["Module"]  = Type.new("Module")
-        current_scope["Functor"] = Type.new("Functor")
+      def create_root_scope
+        Scope.new.tap do |scope|
+          scope["Object"]  = Type.new("Object")
+          scope["Nil"]     = Type.new("Nil")
+          scope["Boolean"] = Type.new("Boolean")
+          scope["Integer"] = Type.new("Integer")
+          scope["Float"]   = Type.new("Float")
+          scope["String"]  = Type.new("String")
+          scope["Symbol"]  = Type.new("Symbol")
+          scope["List"]    = Type.new("List")
+          scope["Map"]     = Type.new("Map")
+          scope["Type"]    = Type.new("Type")
+          scope["Module"]  = Type.new("Module")
+          scope["Functor"] = Type.new("Functor")
+        end
       end
 
       def current_scope; @scope_stack.last; end
@@ -35,6 +36,12 @@ module Myst
       def visit(node : Node)
         node.accept_children(self)
         return root_scope["Object"]
+      end
+
+      def visit(node : Expressions)
+        node.children.reduce(root_scope["Object"]) do |acc, child|
+          acc = visit(child)
+        end
       end
 
       def visit(node : TypeDef)
@@ -91,7 +98,17 @@ module Myst
         arguments = node.args.map{ |a| visit(a) }
 
         clause = method.clause_for(arguments)
-        return clause.returns
+
+        @scope_stack.push(Scope.new)
+        return_type =
+          if clause.has_explicit_return_type?
+            clause.returns
+          else
+            visit(clause.body)
+          end
+        @scope_stack.pop
+
+        return return_type
       end
 
 

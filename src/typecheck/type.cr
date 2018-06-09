@@ -16,6 +16,10 @@ module Myst
       end
 
       def_equals_and_hash id
+
+      def to_s(io : IO)
+        io << name
+      end
     end
   end
 end

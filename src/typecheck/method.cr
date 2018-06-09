@@ -8,6 +8,14 @@ module Myst
       def initialize(@node : Def, @parameters : Array(Type), @returns : Type)
       end
 
+      def has_explicit_return_type? : Bool
+        !!node.return_type?
+      end
+
+      def body
+        node.body
+      end
+
       def_equals_and_hash parameters, returns
     end
 
