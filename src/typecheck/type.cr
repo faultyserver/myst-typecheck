@@ -59,6 +59,24 @@ module Myst
         UnionType.new(types.to_a + other.types.to_a)
       end
 
+      def exclude(other : Type)
+        case (remaining_types = types - [other]).size
+        when 1
+          remaining_types.first
+        else
+          UnionType.new(remaining_types)
+        end
+      end
+
+      def exclude(other : UnionType)
+        case (remaining_types = types - other.types).size
+        when 1
+          remaining_types.first
+        else
+          UnionType.new(remaining_types)
+        end
+      end
+
       def_equals_and_hash types
     end
   end
