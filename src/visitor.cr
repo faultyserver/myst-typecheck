@@ -109,6 +109,10 @@ module Myst
         visit(node.value)
       end
 
+      def visit(node : Self)
+        current_self
+      end
+
 
       def visit(node : SimpleAssign)
         left = node.target.as(StaticAssignable)
