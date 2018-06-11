@@ -28,6 +28,10 @@ module Myst
       def union_with(other : UnionType)
         UnionType.new([self] + other.types)
       end
+
+      def includes?(other : Type)
+        self == other
+      end
     end
 
     class UnionType < Type
@@ -64,7 +68,7 @@ module Myst
         when 1
           remaining_types.first
         else
-          UnionType.new(remaining_types)
+          UnionType.new(remaining_types.to_a)
         end
       end
 
@@ -73,8 +77,16 @@ module Myst
         when 1
           remaining_types.first
         else
-          UnionType.new(remaining_types)
+          UnionType.new(remaining_types.to_a)
         end
+      end
+
+      def includes?(other : Type)
+        types.includes?(other)
+      end
+
+      def includes?(other : UnionType)
+        other.types.all?{ |t| types.includes?(t) }
       end
 
       def_equals_and_hash types

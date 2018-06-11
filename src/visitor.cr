@@ -152,6 +152,50 @@ module Myst
       end
 
 
+      # Boolean logic operations have some nuance to their typing. For example,
+      # in an `Or`, if the first expression is nilable, but the second is not,
+      # then the resulting type is guaranteed to not be Nil, so that can be
+      # removed from the union.
+      #
+      # Since the only possible falsey values are `false` and `nil`, if the
+      # type of the left hand side does _not_ include `Boolean` or `Nil`, the
+      # type will be further restricted (to the left-hand-side only for `Or`,
+      # and to the right-hand side for `And`).
+      def visit(node : Or)
+        left = visit(node.left)
+        right = visit(node.right)
+        union_type = left.union_with(right)
+
+        # If the left can't be falsey, the right has no effect on the type
+        # of the expression. Otherwise, if the right is not nilable, then
+        # the result definitely cannot be nil.
+        if !__is_maybe_falsey?(left) || !right.includes?(T_NIL)
+          union_type = union_type.exclude(T_NIL)
+        end
+
+        union_type
+      end
+
+      def visit(node : And)
+        left = visit(node.left)
+        right = visit(node.right)
+        union_type = left.union_with(right)
+
+        case
+        when left == T_NIL
+          return T_NIL
+        when left.includes?(T_BOOLEAN)
+          union_type
+        else
+          right
+        end
+      end
+
+
+      private def __is_maybe_falsey?(type)
+        type.includes?(T_NIL) || type.includes?(T_BOOLEAN)
+      end
+
       def visit(node : Call)
         this =
           if node.receiver?
