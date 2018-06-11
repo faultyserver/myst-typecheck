@@ -74,34 +74,28 @@ module Myst
         end
       end
 
-      def visit(node : TypeDef)
-        this_type = current_scope[node.name] ||= Type.new(node.name)
 
-        @self_stack.push(this_type)
-        node.accept_children(self)
-        @self_stack.pop
+      def visit(node : NilLiteral);                 return T_NIL;     end
+      def visit(node : BooleanLiteral);             return T_BOOLEAN; end
+      def visit(node : IntegerLiteral);             return T_INTEGER; end
+      def visit(node : FloatLiteral);               return T_FLOAT;   end
+      def visit(node : StringLiteral);              return T_STRING;  end
+      def visit(node : InterpolatedStringLiteral);  return T_STRING;  end
+      def visit(node : SymbolLiteral);              return T_SYMBOL;  end
+      def visit(node : ListLiteral);                return T_LIST;    end
+      def visit(node : MapLiteral);                 return T_MAP;     end
 
-        this_type
+
+      def visit(node : MagicConst)
+        return T_OBJECT
       end
 
-      def visit(node : Def)
-        scope = node.static? ? current_self.static_methods : current_self.instance_methods
-        method = scope[node.name] ||= Method.new(node.name)
 
-        parameter_types = node.params.map{ |p| visit(p).as(Type) }
-        returns = node.return_type? ? visit(node.return_type) : T_OBJECT
-
-        method.add_clause(node, parameter_types, returns)
-        return T_FUNCTOR
+      # def visit(node : Const | Var | Underscore)
+      def visit(node : StaticAssignable)
+        current_scope[node.name]
       end
 
-      def visit(node : Param)
-        if node.restriction?
-          visit(node.restriction)
-        else
-          T_OBJECT
-        end
-      end
 
       def visit(node : SimpleAssign)
         left = node.target.as(StaticAssignable)
@@ -109,11 +103,6 @@ module Myst
         current_scope[left.name, always_create: true] = value_type
 
         return value_type
-      end
-
-      # def visit(node : Const | Var | Underscore)
-      def visit(node : StaticAssignable)
-        current_scope[node.name]
       end
 
 
@@ -172,15 +161,35 @@ module Myst
       end
 
 
-      def visit(node : NilLiteral);                 return T_NIL;     end
-      def visit(node : BooleanLiteral);             return T_BOOLEAN; end
-      def visit(node : IntegerLiteral);             return T_INTEGER; end
-      def visit(node : FloatLiteral);               return T_FLOAT;   end
-      def visit(node : StringLiteral);              return T_STRING;  end
-      def visit(node : InterpolatedStringLiteral);  return T_STRING;  end
-      def visit(node : SymbolLiteral);              return T_SYMBOL;  end
-      def visit(node : ListLiteral);                return T_LIST;    end
-      def visit(node : MapLiteral);                 return T_MAP;     end
+      def visit(node : Param)
+        if node.restriction?
+          visit(node.restriction)
+        else
+          T_OBJECT
+        end
+      end
+
+      def visit(node : Def)
+        scope = node.static? ? current_self.static_methods : current_self.instance_methods
+        method = scope[node.name] ||= Method.new(node.name)
+
+        parameter_types = node.params.map{ |p| visit(p).as(Type) }
+        returns = node.return_type? ? visit(node.return_type) : T_OBJECT
+
+        method.add_clause(node, parameter_types, returns)
+        return T_FUNCTOR
+      end
+
+
+      def visit(node : TypeDef)
+        this_type = current_scope[node.name] ||= Type.new(node.name)
+
+        @self_stack.push(this_type)
+        node.accept_children(self)
+        @self_stack.pop
+
+        this_type
+      end
     end
   end
 end
