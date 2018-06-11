@@ -87,7 +87,16 @@ module Myst
 
 
       def visit(node : MagicConst)
-        return T_OBJECT
+        case node.type
+        when :__LINE__
+          T_INTEGER
+        when :__FILE__
+          T_STRING
+        when :__DIR__
+          T_STRING
+        else
+          raise "Magic Constant #{node.type} has not been given a definite type."
+        end
       end
 
 
