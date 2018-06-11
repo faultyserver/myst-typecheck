@@ -105,6 +105,10 @@ module Myst
         current_scope[node.name]
       end
 
+      def visit(node : ValueInterpolation)
+        visit(node.value)
+      end
+
 
       def visit(node : SimpleAssign)
         left = node.target.as(StaticAssignable)
