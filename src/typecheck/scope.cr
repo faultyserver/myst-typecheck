@@ -3,19 +3,19 @@ require "./type.cr"
 module Myst
   module TypeCheck
     class Scope < Hash(String, Type)
-      property parent : Scope?
+      property! parent : Scope?
 
-      def initialize(@parent : Scope? = nil)
-        super()
+      def initialize(@parent : Scope? = nil, initial_capacity=nil)
+        super(initial_capacity: initial_capacity)
       end
 
       def []?(key)
-        fetch(key) { parent.try(&.fetch(key, nil)) }
+        fetch(key) { parent?.try(&.fetch(key, nil)) }
       end
 
       def [](key)
-        if p = parent
-          fetch(key, nil) || p[key]
+        if parent?
+          fetch(key, nil) || parent[key]
         else
           fetch(key)
         end
@@ -31,11 +31,12 @@ module Myst
           if scope.has_key?(key)
             return scope.assign(key, value)
           end
-          scope = scope.parent
+          scope = scope.parent?
         end
 
         assign(key, value)
       end
+
 
       # Merge the entries of the given Scope into this one. If `unionize` is
       # set to true, duplicate entries will be replaced in this scope with the
@@ -66,6 +67,7 @@ module Myst
         end
         self
       end
+
 
       # TODO: this is an alias for Hash's `[]=`. Since we override it to
       # work with parent scopes, this alternative handles assigning only
