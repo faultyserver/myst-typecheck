@@ -9,5 +9,5 @@ describe "Self" do
     deftype Foo
       x = self
     end
-  ), environment: { "x" => "Foo" }
+  ), environment: { "x" => "Type(Foo)" }
 end

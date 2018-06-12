@@ -1,8 +1,8 @@
 require "../spec_helper.cr"
 
 describe "TypeDef" do
-  # typedefs return the type they define
-  it_types %q(deftype Foo; end), "Foo"
+  # typedefs return the static type they define
+  it_types %q(deftype Foo; end), "Type(Foo)"
 
   it "creates a new type in the current scope" do
     tc = typecheck(%q(

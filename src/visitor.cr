@@ -2,23 +2,59 @@ require "./typecheck/*"
 
 module Myst
   module TypeCheck
-    T_OBJECT  = Type.new("Object")
-    T_NIL     = Type.new("Nil")
-    T_BOOLEAN = Type.new("Boolean")
-    T_INTEGER = Type.new("Integer")
-    T_FLOAT   = Type.new("Float")
-    T_STRING  = Type.new("String")
-    T_SYMBOL  = Type.new("Symbol")
-    T_LIST    = Type.new("List")
-    T_MAP     = Type.new("Map")
-    T_TYPE    = Type.new("Type")
-    T_MODULE  = Type.new("Module")
-    T_FUNCTOR = Type.new("Functor")
+    T_OBJECT_T  = Type.new("Type(Object)")
+    T_OBJECT    = Type.new("Object", static_type: T_OBJECT_T)
+    T_OBJECT_T.instance_type = T_OBJECT
+
+    T_NIL_T  = Type.new("Type(Nil)")
+    T_NIL    = Type.new("Nil", static_type: T_NIL_T)
+    T_NIL_T.instance_type = T_NIL
+
+    T_BOOLEAN_T  = Type.new("Type(Boolean)")
+    T_BOOLEAN    = Type.new("Boolean", static_type: T_BOOLEAN_T)
+    T_BOOLEAN_T.instance_type = T_BOOLEAN
+
+    T_INTEGER_T  = Type.new("Type(Integer)")
+    T_INTEGER    = Type.new("Integer", static_type: T_INTEGER_T)
+    T_INTEGER_T.instance_type = T_INTEGER
+
+    T_FLOAT_T  = Type.new("Type(Float)")
+    T_FLOAT    = Type.new("Float", static_type: T_FLOAT_T)
+    T_FLOAT_T.instance_type = T_FLOAT
+
+    T_STRING_T  = Type.new("Type(String)")
+    T_STRING    = Type.new("String", static_type: T_STRING_T)
+    T_STRING_T.instance_type = T_STRING
+
+    T_SYMBOL_T  = Type.new("Type(Symbol)")
+    T_SYMBOL    = Type.new("Symbol", static_type: T_SYMBOL_T)
+    T_SYMBOL_T.instance_type = T_SYMBOL
+
+    T_LIST_T  = Type.new("Type(List)")
+    T_LIST    = Type.new("List", static_type: T_LIST_T)
+    T_LIST_T.instance_type = T_LIST
+
+    T_MAP_T  = Type.new("Type(Map)")
+    T_MAP    = Type.new("Map", static_type: T_MAP_T)
+    T_MAP_T.instance_type = T_MAP
+
+    T_TYPE_T  = Type.new("Type(Type)")
+    T_TYPE    = Type.new("Type", static_type: T_TYPE_T)
+    T_TYPE_T.instance_type = T_TYPE
+
+    T_MODULE_T  = Type.new("Type(Module)")
+    T_MODULE    = Type.new("Module", static_type: T_MODULE_T)
+    T_MODULE_T.instance_type = T_MODULE
+
+    T_FUNCTOR_T  = Type.new("Type(Functor)")
+    T_FUNCTOR    = Type.new("Functor", static_type: T_FUNCTOR_T)
+    T_FUNCTOR_T.instance_type = T_FUNCTOR
+
+
 
     class Visitor
       property scope_stack : Array(Scope)
       property self_stack : Array(Type)
-
 
       def initialize
         @scope_stack = [create_root_scope]
@@ -57,6 +93,12 @@ module Myst
       end
 
       def current_self;  @self_stack.last;  end
+      def push_self(this : Type)
+        @self_stack.push(this)
+      end
+      def pop_self
+        @self_stack.pop
+      end
 
 
       def visit(node : Node)
@@ -291,65 +333,27 @@ module Myst
       end
 
 
+      def visit(node : TypeDef)
+        static = current_scope[node.name] ||= __make_type(node.name)
+
+        push_self(static)
+        visit(node.body)
+        pop_self
+
+        static
+      end
+
+
+
       private def __is_maybe_falsey?(type)
         type.includes?(T_NIL) || type.includes?(T_BOOLEAN)
       end
 
-
-      def visit(node : Call)
-        this =
-          if node.receiver?
-            visit(node.receiver)
-          else
-            current_self
-          end
-
-        method = this.instance_methods[node.name]
-        arguments = node.args.map{ |a| visit(a) }
-
-        clause = method.clause_for(arguments)
-
-        push_scope
-        return_type =
-          if clause.has_explicit_return_type?
-            clause.returns
-          else
-            visit(clause.body)
-          end
-        pop_scope
-
-        return return_type
-      end
-
-
-      def visit(node : Param)
-        if node.restriction?
-          visit(node.restriction)
-        else
-          T_OBJECT
-        end
-      end
-
-      def visit(node : Def)
-        scope = node.static? ? current_self.static_methods : current_self.instance_methods
-        method = scope[node.name] ||= Method.new(node.name)
-
-        parameter_types = node.params.map{ |p| visit(p).as(Type) }
-        returns = node.return_type? ? visit(node.return_type) : T_OBJECT
-
-        method.add_clause(node, parameter_types, returns)
-        return T_FUNCTOR
-      end
-
-
-      def visit(node : TypeDef)
-        this_type = current_scope[node.name] ||= Type.new(node.name)
-
-        @self_stack.push(this_type)
-        node.accept_children(self)
-        @self_stack.pop
-
-        this_type
+      private def __make_type(name : String)
+        static = Type.new("Type(#{name})")
+        instance = Type.new(name, static_type: static)
+        static.instance_type = instance
+        static
       end
     end
   end

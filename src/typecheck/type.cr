@@ -5,15 +5,23 @@ module Myst
       property id : UInt64
 
       property name : String
-      property instance_methods : Hash(String, Method)
-      property static_methods : Hash(String, Method)
+      property scope : Scope
+
+      property! static_type : Type?
+      property! instance_type : Type?
 
 
-      def initialize(@name : String, @id : UInt64 = @@next_id)
-        @instance_methods = {} of String => Method
-        @static_methods = {} of String => Method
+      def initialize(@name : String, @id : UInt64 = @@next_id, *, @static_type=nil, @instance_type=nil)
+        @scope = Scope.new
         @@next_id += 1
       end
+
+      # To avoid having to check if a type is static in the visitor, assume that
+      # static types won't have the `@static_type` relationship set, and return
+      # `self` in that case.
+      def static_type; @static_type || self; end
+      # Likewise for instance types.
+      def instance_type; @instance_type || self; end
 
       def_equals_and_hash id
 
