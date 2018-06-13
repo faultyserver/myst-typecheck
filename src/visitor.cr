@@ -359,6 +359,17 @@ module Myst
       end
 
 
+      def visit(node : Instantiation)
+        given_type = visit(node.type)
+
+        if !given_type.instantiable?
+          raise "Type given for instantiation is not an instantiable."
+        end
+
+        return given_type.instance_type
+      end
+
+
 
       private def __is_maybe_falsey?(type)
         type.includes?(T_NIL) || type.includes?(T_BOOLEAN)

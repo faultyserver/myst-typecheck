@@ -16,12 +16,19 @@ module Myst
         @@next_id += 1
       end
 
-      # To avoid having to check if a type is static in the visitor, assume that
-      # static types won't have the `@static_type` relationship set, and return
-      # `self` in that case.
+      # To avoid having to check if a type is static in the visitor, assume
+      # that static types won't have the `@static_type` relationship set, and
+      # return `self` in that case.
       def static_type; @static_type || self; end
       # Likewise for instance types.
       def instance_type; @instance_type || self; end
+
+
+      # A type is considered instantiable if it has an `instance_type`. This is
+      # the type that would be returned by an instantiation of this type.
+      def instantiable?
+        !!@instance_type
+      end
 
       def_equals_and_hash id
 
