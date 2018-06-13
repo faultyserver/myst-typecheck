@@ -63,18 +63,18 @@ module Myst
 
       def create_root_scope
         Scope.new.tap do |scope|
-          scope["Object"]  = T_OBJECT
-          scope["Nil"]     = T_NIL
-          scope["Boolean"] = T_BOOLEAN
-          scope["Integer"] = T_INTEGER
-          scope["Float"]   = T_FLOAT
-          scope["String"]  = T_STRING
-          scope["Symbol"]  = T_SYMBOL
-          scope["List"]    = T_LIST
-          scope["Map"]     = T_MAP
-          scope["Type"]    = T_TYPE
-          scope["Module"]  = T_MODULE
-          scope["Functor"] = T_FUNCTOR
+          scope["Object"]  = T_OBJECT_T
+          scope["Nil"]     = T_NIL_T
+          scope["Boolean"] = T_BOOLEAN_T
+          scope["Integer"] = T_INTEGER_T
+          scope["Float"]   = T_FLOAT_T
+          scope["String"]  = T_STRING_T
+          scope["Symbol"]  = T_SYMBOL_T
+          scope["List"]    = T_LIST_T
+          scope["Map"]     = T_MAP_T
+          scope["Type"]    = T_TYPE_T
+          scope["Module"]  = T_MODULE_T
+          scope["Functor"] = T_FUNCTOR_T
         end
       end
 
@@ -330,6 +330,21 @@ module Myst
         else
           right
         end
+      end
+
+
+      def visit(node : Def)
+        container =
+          if node.static?
+            current_self.static_type.scope
+          else
+            current_self.instance_type.scope
+          end
+
+        functor = (container[node.name] ||= Functor.new(node.name)).as(Functor)
+        functor.add_clause(node)
+
+        return T_FUNCTOR
       end
 
 

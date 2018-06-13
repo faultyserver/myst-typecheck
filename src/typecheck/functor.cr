@@ -1,34 +1,22 @@
+require "./type.cr"
+
 module Myst
   module TypeCheck
-    struct Clause
-      property node : Def
-      property parameters : Array(Type)
-      property returns : Type
+    class Functor < Type
+      record Clause,
+        node : Def,
+        call_cache = Hash(Array(Type), Type).new
 
-      def initialize(@node : Def, @parameters : Array(Type), @returns : Type)
-      end
-
-      def has_explicit_return_type? : Bool
-        !!node.return_type?
-      end
-
-      def body
-        node.body
-      end
-
-      def_equals_and_hash parameters, returns
-    end
-
-    struct Method
       property name : String
       property clauses : Array(Clause)
 
-      def initialize(@name : String)
+      def initialize(name : String)
+        super(name)
         @clauses = [] of Clause
       end
 
-      def add_clause(node : Def, parameters : Array(Type), returns : Type)
-        clauses.push(Clause.new(node, parameters, returns))
+      def add_clause(node : Def)
+        clauses.push(Clause.new(node))
         self
       end
 

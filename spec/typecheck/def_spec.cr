@@ -1,0 +1,147 @@
+require "../spec_helper.cr"
+
+describe "Def" do
+  # Currently, all function definitions return a generic `Functor` type.
+  # Eventually, it would be nice to provide "specialized" Functor types based
+  # on the argument and return types. How advantageous this would actually be
+  # is not yet clear, though.
+  it_types %q(
+    def foo(a, b); end
+  ), "Functor"
+
+  it_types %q(
+    def foo(a : Integer) : Float; end
+  ), "Functor"
+
+  it_types %q(
+    def foo(a : Integer | Float) : String | Nil; end
+  ), "Functor"
+
+  it_types %q(
+    def foo; end
+  ), "Functor"
+
+  it_types %q(
+    def foo
+      1
+    end
+  ), "Functor"
+
+  it_types %q(
+    def foo(a, b)
+      false
+    end
+  ), "Functor"
+
+  it_types %q(
+    def foo(a, b)
+      when false
+        x
+      else
+        "nope"
+      end
+    end
+  ), "Functor"
+
+
+  describe "inside a type definition" do
+    it "creates a new functor on the type if one does not exist" do
+      tc = typecheck(%q(
+        deftype Foo
+          def foo; end
+        end
+      ))
+      foo = tc.current_scope["Foo"].instance_type
+      functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor.clauses.size.should eq(1)
+    end
+
+    it "does not leak the functor outside of the type" do
+      tc = typecheck(%q(
+        deftype Foo
+          def foo; end
+        end
+      ))
+      foo = tc.current_scope.has_key?("foo").should be_false
+    end
+
+    it "adds a clause to the existing functor if one exists" do
+      tc = typecheck(%q(
+        deftype Foo
+          def foo; end
+          def foo(a); end
+        end
+      ))
+      foo = tc.current_scope["Foo"].instance_type
+      functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor.clauses.size.should eq(2)
+    end
+
+    it "does not merge clauses with different names" do
+      tc = typecheck(%q(
+        deftype Foo
+          def foo; end
+          def bar; end
+        end
+      ))
+      foo = tc.current_scope["Foo"].instance_type
+      functor1 = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor1.clauses.size.should eq(1)
+      functor2 = foo.scope["bar"].as(Myst::TypeCheck::Functor)
+      functor2.clauses.size.should eq(1)
+    end
+
+    it "can merge clauses in different openings of the type" do
+      tc = typecheck(%q(
+        deftype Foo
+          def foo; end
+        end
+
+        deftype Foo
+          def foo(a); end
+        end
+      ))
+      foo = tc.current_scope["Foo"].instance_type
+      functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor.clauses.size.should eq(2)
+    end
+
+
+    it "places static definitions on the static type" do
+      tc = typecheck(%q(
+        deftype Foo
+          defstatic foo; end
+        end
+      ))
+      foo = tc.current_scope["Foo"].static_type
+      functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor.clauses.size.should eq(1)
+    end
+
+    it "adds static clauses to existing functors" do
+      tc = typecheck(%q(
+        deftype Foo
+          defstatic foo; end
+          defstatic foo(a); end
+        end
+      ))
+      foo = tc.current_scope["Foo"].static_type
+      functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor.clauses.size.should eq(2)
+    end
+
+    it "does not merge static clauses with different names" do
+      tc = typecheck(%q(
+        deftype Foo
+          defstatic foo; end
+          defstatic bar; end
+        end
+      ))
+      foo = tc.current_scope["Foo"].static_type
+      functor1 = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor1.clauses.size.should eq(1)
+      functor2 = foo.scope["bar"].as(Myst::TypeCheck::Functor)
+      functor2.clauses.size.should eq(1)
+    end
+  end
+end
