@@ -12,10 +12,19 @@ describe "Instantiation" do
   it_types %q(%Map{}), "Map"
   it_types %q(%Type{}), "Type"
 
-  it "does not allow instantiation of non-static types" do
+  it "does not allow instantiation of instance types" do
     # 1 is an _instance type_ of the Integer _static type_.
     expect_raises(Exception) do
       tc = typecheck(%q(%<1>{}))
+    end
+  end
+
+  it "does not allow instantiation of modules" do
+    expect_raises(Exception) do
+      tc = typecheck(%q(
+        defmodule Foo; end
+        %<Foo>{}
+      ))
     end
   end
 

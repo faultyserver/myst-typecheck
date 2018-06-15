@@ -49,6 +49,7 @@ module Myst
       end
     end
 
+
     class UnionType < Type
       property types : Set(Type)
 

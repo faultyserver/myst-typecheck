@@ -348,6 +348,17 @@ module Myst
       end
 
 
+
+      def visit(node : ModuleDef)
+        module_type = current_scope[node.name] ||= Type.new(node.name)
+
+        push_self(module_type)
+        visit(node.body)
+        pop_self
+
+        module_type
+      end
+
       def visit(node : TypeDef)
         static = current_scope[node.name] ||= __make_type(node.name)
 

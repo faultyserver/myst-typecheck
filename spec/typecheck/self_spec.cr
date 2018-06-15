@@ -10,4 +10,11 @@ describe "Self" do
       x = self
     end
   ), environment: { "x" => "Type(Foo)" }
+
+  it_types %q(
+    x = nil
+    defmodule Foo
+      x = self
+    end
+  ), environment: { "x" => "Foo" }
 end

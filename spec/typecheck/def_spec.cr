@@ -144,4 +144,82 @@ describe "Def" do
       functor2.clauses.size.should eq(1)
     end
   end
+
+
+  describe "inside a module definition" do
+    it "creates a new functor on the type if one does not exist" do
+      tc = typecheck(%q(
+        defmodule Foo
+          def foo; end
+        end
+      ))
+      foo = tc.current_scope["Foo"]
+      functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor.clauses.size.should eq(1)
+    end
+
+    it "does not leak the functor outside of the type" do
+      tc = typecheck(%q(
+        defmodule Foo
+          def foo; end
+        end
+      ))
+      foo = tc.current_scope.has_key?("foo").should be_false
+    end
+
+    it "adds a clause to the existing functor if one exists" do
+      tc = typecheck(%q(
+        defmodule Foo
+          def foo; end
+          def foo(a); end
+        end
+      ))
+      foo = tc.current_scope["Foo"]
+      functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor.clauses.size.should eq(2)
+    end
+
+    it "does not merge clauses with different names" do
+      tc = typecheck(%q(
+        defmodule Foo
+          def foo; end
+          def bar; end
+        end
+      ))
+      foo = tc.current_scope["Foo"]
+      functor1 = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor1.clauses.size.should eq(1)
+      functor2 = foo.scope["bar"].as(Myst::TypeCheck::Functor)
+      functor2.clauses.size.should eq(1)
+    end
+
+    it "can merge clauses in different openings of the module" do
+      tc = typecheck(%q(
+        defmodule Foo
+          def foo; end
+        end
+
+        defmodule Foo
+          def foo(a); end
+        end
+      ))
+      foo = tc.current_scope["Foo"].instance_type
+      functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
+      functor.clauses.size.should eq(2)
+    end
+
+
+    # TODO: This should be checked, but I don't know how/when. Doing so
+    # immediately from the first pass of typing feels weird.
+    #
+    # it "does not allow static definitions" do
+    #   expect_raises(Exception) do
+    #     tc = typecheck(%q(
+    #       defmodule Foo
+    #         defstatic foo; end
+    #       end
+    #     ))
+    #   end
+    # end
+  end
 end
