@@ -1,36 +1,22 @@
 require "myst"
 
-require "./visitor.cr"
+require "./typecheck/**"
 
-# program = Myst::Parser.for_content(%q(
-#   deftype Integer
-#     def +(other : Integer) : Integer; end
-#     def +(other : Float) : Float; end
-#   end
+module Myst
+  module TypeCheck
+    extend self
 
-#   deftype Float
-#     def +(other : Integer) : Float; end
-#     def +(other : Float) : Float; end
-#   end
+    def typecheck(source : String) : Tuple(Environment, Type)
+      program = ::Myst::Parser.for_content(source).parse
+      env = Environment.new
 
+      def_visitor = DefVisitor.new(env)
+      def_visitor.visit(program)
 
-#   def infer_return
-#     x = 2.0 + 3
-#     y = 1 + 2.0
-#     z = x + y
-#   end
+      main_visitor = MainVisitor.new(env)
+      result = main_visitor.visit(program)
 
-#   def infer_return(a : Integer)
-#     "no"
-#   end
-
-#   a = infer_return
-#   b = infer_return(1)
-# )).parse
-
-# typechecker = Myst::TypeCheck::Visitor.new
-# typechecker.visit(program)
-
-# typechecker.current_scope.each do |name, type|
-#   puts "#{name} : #{type}"
-# end
+      {env, result}
+    end
+  end
+end

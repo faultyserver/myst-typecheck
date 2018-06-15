@@ -46,45 +46,45 @@ describe "Def" do
 
   describe "inside a type definition" do
     it "creates a new functor on the type if one does not exist" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         deftype Foo
           def foo; end
         end
       ))
-      foo = tc.current_scope["Foo"].instance_type
+      foo = env.current_scope["Foo"].instance_type
       functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor.clauses.size.should eq(1)
     end
 
     it "does not leak the functor outside of the type" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         deftype Foo
           def foo; end
         end
       ))
-      foo = tc.current_scope.has_key?("foo").should be_false
+      foo = env.current_scope.has_key?("foo").should be_false
     end
 
     it "adds a clause to the existing functor if one exists" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         deftype Foo
           def foo; end
           def foo(a); end
         end
       ))
-      foo = tc.current_scope["Foo"].instance_type
+      foo = env.current_scope["Foo"].instance_type
       functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor.clauses.size.should eq(2)
     end
 
     it "does not merge clauses with different names" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         deftype Foo
           def foo; end
           def bar; end
         end
       ))
-      foo = tc.current_scope["Foo"].instance_type
+      foo = env.current_scope["Foo"].instance_type
       functor1 = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor1.clauses.size.should eq(1)
       functor2 = foo.scope["bar"].as(Myst::TypeCheck::Functor)
@@ -92,7 +92,7 @@ describe "Def" do
     end
 
     it "can merge clauses in different openings of the type" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         deftype Foo
           def foo; end
         end
@@ -101,43 +101,43 @@ describe "Def" do
           def foo(a); end
         end
       ))
-      foo = tc.current_scope["Foo"].instance_type
+      foo = env.current_scope["Foo"].instance_type
       functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor.clauses.size.should eq(2)
     end
 
 
     it "places static definitions on the static type" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         deftype Foo
           defstatic foo; end
         end
       ))
-      foo = tc.current_scope["Foo"].static_type
+      foo = env.current_scope["Foo"].static_type
       functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor.clauses.size.should eq(1)
     end
 
     it "adds static clauses to existing functors" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         deftype Foo
           defstatic foo; end
           defstatic foo(a); end
         end
       ))
-      foo = tc.current_scope["Foo"].static_type
+      foo = env.current_scope["Foo"].static_type
       functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor.clauses.size.should eq(2)
     end
 
     it "does not merge static clauses with different names" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         deftype Foo
           defstatic foo; end
           defstatic bar; end
         end
       ))
-      foo = tc.current_scope["Foo"].static_type
+      foo = env.current_scope["Foo"].static_type
       functor1 = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor1.clauses.size.should eq(1)
       functor2 = foo.scope["bar"].as(Myst::TypeCheck::Functor)
@@ -148,45 +148,45 @@ describe "Def" do
 
   describe "inside a module definition" do
     it "creates a new functor on the type if one does not exist" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         defmodule Foo
           def foo; end
         end
       ))
-      foo = tc.current_scope["Foo"]
+      foo = env.current_scope["Foo"]
       functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor.clauses.size.should eq(1)
     end
 
     it "does not leak the functor outside of the type" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         defmodule Foo
           def foo; end
         end
       ))
-      foo = tc.current_scope.has_key?("foo").should be_false
+      foo = env.current_scope.has_key?("foo").should be_false
     end
 
     it "adds a clause to the existing functor if one exists" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         defmodule Foo
           def foo; end
           def foo(a); end
         end
       ))
-      foo = tc.current_scope["Foo"]
+      foo = env.current_scope["Foo"]
       functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor.clauses.size.should eq(2)
     end
 
     it "does not merge clauses with different names" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         defmodule Foo
           def foo; end
           def bar; end
         end
       ))
-      foo = tc.current_scope["Foo"]
+      foo = env.current_scope["Foo"]
       functor1 = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor1.clauses.size.should eq(1)
       functor2 = foo.scope["bar"].as(Myst::TypeCheck::Functor)
@@ -194,7 +194,7 @@ describe "Def" do
     end
 
     it "can merge clauses in different openings of the module" do
-      tc = typecheck(%q(
+      env, _ = typecheck(%q(
         defmodule Foo
           def foo; end
         end
@@ -203,7 +203,7 @@ describe "Def" do
           def foo(a); end
         end
       ))
-      foo = tc.current_scope["Foo"].instance_type
+      foo = env.current_scope["Foo"].instance_type
       functor = foo.scope["foo"].as(Myst::TypeCheck::Functor)
       functor.clauses.size.should eq(2)
     end
@@ -214,7 +214,7 @@ describe "Def" do
     #
     # it "does not allow static definitions" do
     #   expect_raises(Exception) do
-    #     tc = typecheck(%q(
+    #     env, _ = typecheck(%q(
     #       defmodule Foo
     #         defstatic foo; end
     #       end
