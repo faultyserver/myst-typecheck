@@ -1,37 +1,37 @@
 require "../spec_helper.cr"
 
 describe "Def" do
-  # Currently, all function definitions return a generic `Functor` type.
-  # Eventually, it would be nice to provide "specialized" Functor types based
-  # on the argument and return types. How advantageous this would actually be
-  # is not yet clear, though.
+  # Def returns the functor that it defines/appends. Every functor is
+  # considered its own type to simplify managing uniqueness of functions,
+  # handling function capturing, and analysis as part of the existing
+  # scopes for types.
   it_types %q(
     def foo(a, b); end
-  ), "Functor"
+  ), "Functor(foo)"
 
   it_types %q(
     def foo(a : Integer) : Float; end
-  ), "Functor"
+  ), "Functor(foo)"
 
   it_types %q(
     def foo(a : Integer | Float) : String | Nil; end
-  ), "Functor"
+  ), "Functor(foo)"
 
   it_types %q(
     def foo; end
-  ), "Functor"
+  ), "Functor(foo)"
 
   it_types %q(
     def foo
       1
     end
-  ), "Functor"
+  ), "Functor(foo)"
 
   it_types %q(
     def foo(a, b)
       false
     end
-  ), "Functor"
+  ), "Functor(foo)"
 
   it_types %q(
     def foo(a, b)
@@ -41,7 +41,7 @@ describe "Def" do
         "nope"
       end
     end
-  ), "Functor"
+  ), "Functor(foo)"
 
 
   describe "inside a type definition" do

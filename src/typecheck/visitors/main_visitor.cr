@@ -231,7 +231,14 @@ module Myst
 
 
       def visit(node : Def)
-        return T_FUNCTOR
+        container =
+          if node.static?
+            env.current_self.static_type.scope
+          else
+            env.current_self.instance_type.scope
+          end
+
+        container[node.name]
       end
 
 

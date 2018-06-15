@@ -20,6 +20,10 @@ module Myst
         self
       end
 
+      def name
+        "Functor(#{@name})"
+      end
+
       def clause_for(arguments : Array(Type))
         matching_clause =
           @clauses.find do |clause|
