@@ -348,7 +348,6 @@ module Myst
       end
 
 
-
       def visit(node : ModuleDef)
         module_type = current_scope[node.name] ||= Type.new(node.name)
 
