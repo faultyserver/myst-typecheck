@@ -174,4 +174,22 @@ describe "Conditionals" do
       x = 2
     end
   ), environment: { "x" => "Integer" }
+
+
+  # Instance variables are always potentially-nilable (because any reference to
+  # them _could potentially_ be the first reference in the program).
+  it_types %q(
+    when @something
+      x = 4
+    end
+  ), environment: { "x" => "Integer | Nil" }
+
+  # Even if the instance variable has been assigned immediately beforehand, it
+  # cannot safely be inferred.
+  it_types %q(
+    @something = 1
+    when @something
+      x = 4
+    end
+  ), environment: { "x" => "Integer | Nil" }
 end

@@ -37,6 +37,12 @@ describe "Loops (While/Until)" do
   ), environment: { "x" => "Nil | Symbol" }
 
   it_types %q(
+    while @something
+      x = :a
+    end
+  ), environment: { "x" => "Nil | Symbol" }
+
+  it_types %q(
     x = false
     while true
       x = 1

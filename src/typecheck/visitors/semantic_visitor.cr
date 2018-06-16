@@ -13,7 +13,7 @@ module Myst
 
 
       private def __is_maybe_falsey?(type)
-        type.includes?(T_NIL) || type.includes?(T_BOOLEAN)
+        type.includes?(T_NIL) || type.includes?(T_BOOLEAN) || type == T_ANY
       end
 
       private def __make_type(name : String)

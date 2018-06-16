@@ -47,7 +47,14 @@ module Myst
       def includes?(other : Type)
         self == other
       end
+
+      # Excluding a type from a singular type is non-sensical, and should never
+      # happen. However, it needs to be supported on all Types for consistency.
+      def exclude(other : Type)
+        raise "Attempted to exclude #{other} from singular type #{self}."
+      end
     end
+
 
 
     class UnionType < Type
@@ -106,6 +113,37 @@ module Myst
       end
 
       def_equals_and_hash types
+    end
+
+
+    # `Any` is a special type that implies any type would be valid in its place
+    # (including `Nil`), but the entity should not be considered as something
+    # generic, like `Object`.
+    #
+    # For the most part, `Any` is used as placeholders for untyped method
+    # parameters and instance variables.
+    class AnyType < Type
+      def initialize
+        super("Any")
+      end
+
+      # Since Any represents the ability to be any type, a union with `Any` is
+      # meaningless, and should be avoided so that `Any` can always be checked
+      # directly.
+      def union_with(other : Type)
+        self
+      end
+
+      # Similarly, `Any` inherently includes any and all types.
+      def includes?(other : Type)
+        true
+      end
+
+      # It also cannot exclude Any types, because the set of remaining types
+      # is non-determinable.
+      def exclude(other : Type)
+        self
+      end
     end
   end
 end
