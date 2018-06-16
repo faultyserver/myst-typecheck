@@ -22,4 +22,68 @@ describe "ModuleDef" do
 
     env.current_scope.has_key?("Foo").should eq(true)
   end
+
+  it "handles modules defined within other modules" do
+    env, _ = typecheck(%q(
+      defmodule Foo
+        defmodule Bar; end
+        defmodule Baz; end
+      end
+    ))
+
+    foo = env.current_scope["Foo"]
+    foo.scope.has_key?("Bar").should eq(true)
+    foo.scope.has_key?("Baz").should eq(true)
+  end
+
+  it "handles modules defined within types" do
+    env, _ = typecheck(%q(
+      deftype Foo
+        defmodule Bar; end
+        defmodule Baz; end
+      end
+    ))
+
+    foo = env.current_scope["Foo"]
+    foo.scope.has_key?("Bar").should eq(true)
+    foo.scope.has_key?("Baz").should eq(true)
+  end
+
+  it "handles nested modules with the same name" do
+    env, _ = typecheck(%q(
+      defmodule Foo
+        defmodule Foo; end
+      end
+    ))
+
+    base_foo  = env.current_scope["Foo"]
+    foo_foo   = base_foo.scope.fetch("Foo")
+    base_foo.should_not eq(foo_foo)
+  end
+
+  it "handles modules within types with the same name" do
+    env, _ = typecheck(%q(
+      deftype Foo
+        defmodule Foo; end
+      end
+    ))
+
+    base_foo  = env.current_scope["Foo"]
+    foo_foo   = base_foo.scope.fetch("Foo")
+    base_foo.should_not eq(foo_foo)
+  end
+
+  it "handles modules with the same name in different namespaces" do
+    env, _ = typecheck(%q(
+      defmodule Foo; end
+      deftype Bar;
+        defmodule Foo; end
+      end
+    ))
+
+    base_foo  = env.current_scope["Foo"]
+    bar       = env.current_scope["Bar"]
+    bar_foo   = bar.scope.fetch("Foo")
+    base_foo.should_not eq(bar_foo)
+  end
 end

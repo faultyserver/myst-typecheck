@@ -69,6 +69,15 @@ module Myst
       end
 
 
+      def find_or_assign(key, new_value)
+        if has_key?(key)
+          self[key]
+        else
+          assign(key, new_value)
+        end
+      end
+
+
       # TODO: this is an alias for Hash's `[]=`. Since we override it to
       # work with parent scopes, this alternative handles assigning only
       # within this scope. Finding a nice way to make this alias implicitly

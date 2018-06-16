@@ -5,30 +5,39 @@ module Myst
       property self_stack : Array(Type)
 
       def initialize
-        @scope_stack = [create_root_scope]
-        @self_stack = [Type.new("main")] of Type
+        root = Type.new("main")
+        create_root_scope(root.scope)
+        @scope_stack = [] of Scope
+        @self_stack = [root] of Type
       end
 
-      def create_root_scope
-        Scope.new.tap do |scope|
-          scope["Object"]  = T_OBJECT_T
-          scope["Nil"]     = T_NIL_T
-          scope["Boolean"] = T_BOOLEAN_T
-          scope["Integer"] = T_INTEGER_T
-          scope["Float"]   = T_FLOAT_T
-          scope["String"]  = T_STRING_T
-          scope["Symbol"]  = T_SYMBOL_T
-          scope["List"]    = T_LIST_T
-          scope["Map"]     = T_MAP_T
-          scope["Type"]    = T_TYPE_T
-          scope["Module"]  = T_MODULE_T
-          scope["Functor"] = T_FUNCTOR_T
-        end
+      def create_root_scope(root)
+        root["Object"]  = T_OBJECT_T
+        root["Nil"]     = T_NIL_T
+        root["Boolean"] = T_BOOLEAN_T
+        root["Integer"] = T_INTEGER_T
+        root["Float"]   = T_FLOAT_T
+        root["String"]  = T_STRING_T
+        root["Symbol"]  = T_SYMBOL_T
+        root["List"]    = T_LIST_T
+        root["Map"]     = T_MAP_T
+        root["Type"]    = T_TYPE_T
+        root["Module"]  = T_MODULE_T
+        root["Functor"] = T_FUNCTOR_T
       end
 
 
-      def root_scope; @scope_stack.first; end
-      def current_scope; @scope_stack.last; end
+      def root_scope
+        @scope_stack.first
+      end
+
+      def current_scope
+        scope_override || current_self.scope
+      end
+
+      def scope_override
+        @scope_stack.last?
+      end
 
       def push_scope(scope=nil)
         scope ||= Scope.new(current_scope)
@@ -45,7 +54,9 @@ module Myst
       end
 
 
-      def current_self;  @self_stack.last;  end
+      def current_self
+        @self_stack.last
+      end
 
       def push_self(this : Type)
         @self_stack.push(this)
