@@ -2,6 +2,14 @@ require "./type.cr"
 
 module Myst
   module TypeCheck
+    # `Any` is a special type that implies any type would be valid in its place
+    # (including `Nil`), but the entity should not be considered as something
+    # generic, like `Object`.
+    #
+    # For the most part, `Any` is used as placeholders for untyped method
+    # parameters and instance variables.
+    T_ANY = Type.new("Any")
+
     T_OBJECT_T  = Type.new("Type(Object)")
     T_OBJECT    = Type.new("Object", static_type: T_OBJECT_T)
     T_OBJECT_T.instance_type = T_OBJECT

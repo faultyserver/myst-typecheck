@@ -44,6 +44,23 @@ module Myst
         env.current_scope[node.name]
       end
 
+      # Until instance variables can have type restrictions applied to them,
+      # we can't effectively/efficiently declare an exact type for them,
+      # because their mutations are not directly trackable from the AST. So,
+      # at least for now, they are always just typed as generic `Object`s.
+      #
+      # This is a bit of a cop-out, but is arguably nicer than trying to
+      # determine some exact typing that isn't helpfully-accurate at the time
+      # of use.
+      def visit(node : IVar)
+        # If the IVar does not yet exist as an entry, it immediately gets
+        # created in the interpreter with the value `Nil`. However, we can't
+        # guarantee-ably assume that the first time we see an IVar here will
+        # be the first time it gets referenced when running the program, so the
+        # best we can do is assign it as an `Any`.
+        env.current_self.scope[node.name] ||= T_ANY
+      end
+
       def visit(node : ValueInterpolation)
         visit(node.value)
       end
@@ -54,11 +71,19 @@ module Myst
 
 
       def visit(node : SimpleAssign)
-        left = node.target.as(StaticAssignable)
-        value_type = visit(node.value)
-        env.current_scope[left.name, always_create: true] = value_type
-
-        return value_type
+        case left = node.target
+        when IVar
+          env.current_self.scope[left.name, always_create: true] = T_ANY
+          T_ANY
+        when StaticAssignable
+          value_type = visit(node.value)
+          env.current_scope[left.name, always_create: true] = value_type
+          value_type
+        else
+          # This should be unreachable. The parser should guarantee that
+          # `node.target` is a `StaticAssignable`.
+          raise "Invalid target for SimpleAssign: #{left}"
+        end
       end
 
 
