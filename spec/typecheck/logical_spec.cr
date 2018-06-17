@@ -6,7 +6,7 @@ describe "Or" do
 
   # If the inferrer knows that the left hand side will not be falsey, it will
   # restrict the type of the result to the left hand side appropriately.
-  it_types %q("hi" || :hi),   "String | Symbol"
+  it_types %q("hi" || :hi),   "String"
   it_types %q(1 || nil),      "Integer"
   # If the left hand side _must_ be falsey (e.g., is `Nil`), then it will only
   # be typed with the right hand's type.

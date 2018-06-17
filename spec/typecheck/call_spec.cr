@@ -57,6 +57,23 @@ describe "Call" do
     foo(1, 2)
   ), /no matching clause/
 
+  # But, if multiple clauses could match, the resulting type is the union of
+  # the return types from each clause.
+  it_types %q(
+    def foo(a : Boolean); :error; end
+    def foo(a : String); "hello"; end
+
+    foo(true || "maybe")
+  ), "String | Symbol"
+
+  it_types %q(
+    def foo(a : Integer); 1; end
+    def foo(a : String); "hello"; end
+    def foo(a); nil; end
+
+    foo(@something)
+  ), "Integer | Nil | String"
+
 
   # Type restrictions can also cause matches to fail if the argument type does
   # not match what is given.
@@ -79,4 +96,34 @@ describe "Call" do
     def foo(a : Integer); end
     foo("Hello")
   ), /no matching clause/
+
+
+  # Named parameters have their types set according to the given arguments.
+  # This can cause the return type of a clause to change dynamically if the
+  # type is dependent on the type of a parameter.
+  it_types %q(
+    def foo(a); a; end
+    foo(1)
+  ), "Integer"
+
+  it_types %q(
+    def foo(a, b)
+      when true
+        a
+      else
+        b
+      end
+    end
+    foo(1, "hello")
+  ), "Integer | String"
+
+  # Parameters can also be re-assigned inside the method body, changing their
+  # types.
+  it_types %q(
+    def foo(a)
+      a = false
+      a
+    end
+    foo(1)
+  ), "Boolean"
 end

@@ -229,14 +229,20 @@ module Myst
         right = visit(node.right)
         union_type = left.union_with(right)
 
+        case
         # If the left can't be falsey, the right has no effect on the type
-        # of the expression. Otherwise, if the right is not nilable, then
-        # the result definitely cannot be nil.
-        if !__is_maybe_falsey?(left) || !right.includes?(T_NIL)
-          union_type = union_type.exclude(T_NIL)
+        # of the expression.
+        when !__is_maybe_falsey?(left)
+          left
+        # Otherwise, if the right is not nilable, then the result definitely
+        # cannot be nil, so it can be excluded from the union type
+        when !right.includes?(T_NIL)
+          union_type.exclude(T_NIL)
+        # If none of the above are true, the result is just the union of both
+        # sides.
+        else
+          union_type
         end
-
-        union_type
       end
 
       def visit(node : And)
@@ -268,7 +274,16 @@ module Myst
 
         # The type result of a Call is the union type of all clauses that
         # could match the given arguments.
-        clauses.map{ |c| visit(c.body) }.reduce{ |result, t| result.union_with(t) }
+        clause_types = clauses.map do |c|
+          env.push_scope
+          assign_args(c, arguments)
+          result = visit(c.body)
+          env.pop_scope
+          result
+        end
+
+        result_union = clause_types.reduce{ |r, t| r.union_with(t) }
+        result_union
       end
 
 
@@ -318,15 +333,46 @@ module Myst
 
           typed_params = clause.params.map do |param|
             if param.restriction?
-              visit(param.restriction)
+              visit(param.restriction).instance_type
             else
               T_ANY
             end
           end
 
           typed_params.zip(arguments).all? do |(param, arg)|
-            param == arg || param == T_ANY
+            types_overlap?(param, arg)
           end
+        end
+      end
+
+
+      # Iterate the clause parameters and set their values to the corresponding
+      # values in the arguments array.
+      private def assign_args(clause : Functor::Clause, arguments : Array(Type))
+        clause.params.size.times do |idx|
+          param = clause.params[idx]
+          arg = arguments[idx]
+
+          if param.name?
+            env.current_scope[param.name] = arg
+          end
+        end
+      end
+
+      private def types_overlap?(type1, type2)
+        case {type1, type2}
+        when {AnyType, _}
+          true
+        when {_, AnyType}
+          true
+        when {UnionType, UnionType}
+          type1.includes?(type2) || type2.includes?(type1) || type1 == type2
+        when {UnionType, Type}
+          type1.includes?(type2)
+        when {Type, UnionType}
+          type2.includes?(type1)
+        else
+          type1 == type2
         end
       end
     end
