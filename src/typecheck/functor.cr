@@ -3,9 +3,16 @@ require "./type.cr"
 module Myst
   module TypeCheck
     class Functor < Type
-      record Clause,
-        node : Def,
-        call_cache = Hash(Array(Type), Type).new
+      struct Clause
+        property node : Def
+        property call_cache = Hash(Array(Type), Type).new
+
+        def initialize(@node : Def)
+        end
+
+        delegate body, params, to: node
+      end
+
 
       property name : String
       property clauses : Array(Clause)
@@ -24,18 +31,6 @@ module Myst
         "Functor(#{@name})"
       end
 
-      def clause_for(arguments : Array(Type))
-        matching_clause =
-          @clauses.find do |clause|
-            next unless clause.parameters.size == arguments.size
-
-            clause.parameters.each.with_index.all? do |param, idx|
-              param == arguments[idx]
-            end
-          end
-
-        matching_clause || raise "No matching clause for #{name} given #{arguments}"
-      end
 
       def_equals_and_hash name, clauses
     end

@@ -254,16 +254,30 @@ module Myst
         end
       end
 
+      def visit(node : Call)
+        functor = env.current_scope[node.name].as(Functor)
+        arguments = node.args.map do |arg|
+          visit(arg)
+        end
+
+        clauses = matching_clauses_for_functor(functor, arguments)
+
+        if clauses.size == 0
+          raise "No matching clause for Call to #{node.name}"
+        end
+
+        # The type result of a Call is the union type of all clauses that
+        # could match the given arguments.
+        clauses.map{ |c| visit(c.body) }.reduce{ |result, t| result.union_with(t) }
+      end
+
 
       def visit(node : Def)
-        container =
-          if node.static?
-            env.current_self.static_type.scope
-          else
-            env.current_self.instance_type.scope
-          end
-
-        container[node.name]
+        if node.static?
+          env.current_self.static_type.scope[node.name]
+        else
+          env.current_self.instance_type.scope[node.name]
+        end
       end
 
 
@@ -292,6 +306,28 @@ module Myst
         end
 
         return given_type.instance_type
+      end
+
+
+
+      # Iterate the clauses of the given functor, attempting to match all of
+      # the given arguments. Returns the clauses that successfully match.
+      private def matching_clauses_for_functor(functor : Functor, arguments : Array(Type))
+        functor.clauses.select do |clause|
+          next unless clause.params.size == arguments.size
+
+          typed_params = clause.params.map do |param|
+            if param.restriction?
+              visit(param.restriction)
+            else
+              T_ANY
+            end
+          end
+
+          typed_params.zip(arguments).all? do |(param, arg)|
+            param == arg || param == T_ANY
+          end
+        end
       end
     end
   end
