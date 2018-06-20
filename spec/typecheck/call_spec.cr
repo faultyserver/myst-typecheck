@@ -126,4 +126,16 @@ describe "Call" do
     end
     foo(1)
   ), "Boolean"
+
+
+  # Type restrictions for parameters can be given as type unions. When a Call
+  # is made to a function with a union parameter, though, the parameter is
+  # given only the type of the argument.
+  it_types %q(
+    def foo(a : Integer | String)
+      a
+    end
+
+    foo("hello")
+  ), "String"
 end

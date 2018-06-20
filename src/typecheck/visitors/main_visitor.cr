@@ -312,6 +312,17 @@ module Myst
         static
       end
 
+      def visit(node : TypeUnion)
+        # Currently, the only valid use of a TypeUnion is as a parameter or
+        # return type restriction. In these situations, a _static_ type is
+        # named, but the _instance_ type is used for the actual restriction.
+        types = node.types.map{ |t| visit(t).instance_type }
+
+        types.reduce do |acc, t|
+          acc.union_with(t)
+        end
+      end
+
 
       def visit(node : Instantiation)
         given_type = visit(node.type)
