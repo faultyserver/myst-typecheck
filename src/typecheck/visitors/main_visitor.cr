@@ -86,6 +86,12 @@ module Myst
         end
       end
 
+      def visit(node : MatchAssign)
+        value_type = visit(node.value)
+        match_pattern(node.pattern, value_type)
+        value_type
+      end
+
 
       # Merging of conditional scopes is complex. For any given variable,
       # if every clause in the conditional has an assignment to it, then the
@@ -260,6 +266,13 @@ module Myst
         end
       end
 
+
+      def visit(node : Splat)
+        visit(node.value)
+        T_LIST
+      end
+
+
       def visit(node : Call)
         functor = env.current_scope[node.name].as(Functor)
         arguments = node.args.map do |arg|
@@ -385,6 +398,19 @@ module Myst
         else
           type1 == type2
         end
+      end
+
+
+      # TODO: Type checking on matches is _very_ weak currently.
+      #
+      # To improve this:
+      #   - Implement optional/inferred generics for List and Map
+      #   - Allow type restrictions in match patterns
+      #   ? Add Tuples and NamedTuples
+      private def match_pattern(pattern : Node, value_type : Type) : Nil
+        pattern_visitor = PatternMatcher.new(env)
+        pattern_visitor.match(pattern, value_type)
+        nil
       end
     end
   end

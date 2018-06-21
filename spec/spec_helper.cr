@@ -20,13 +20,15 @@ def it_types(source : String, *, environment : Hash(String, String), line=__LINE
   end
 end
 
-def it_does_not_type(source : String, message : Regex, line=__LINE__, file=__FILE__, end_line=__END_LINE__)
+def it_does_not_type(source : String, message : Regex?=nil, line=__LINE__, file=__FILE__, end_line=__END_LINE__)
   it "raises an error when typing `#{source}`", line: line, file: file, end_line: end_line do
     error = expect_raises(Exception) do
       Myst::TypeCheck.typecheck(source)
     end
 
-    (error.message || "").downcase.should match(message)
+    if message
+      (error.message || "").downcase.should match(message)
+    end
   end
 end
 

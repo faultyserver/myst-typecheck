@@ -97,6 +97,20 @@ describe "Call" do
     foo("Hello")
   ), /no matching clause/
 
+  # Additionally, in multi-clause functions, some clauses may match while
+  # others do not. The return type in this situation is only the union of those
+  # that match the arguments
+  it_types %q(
+    def foo(a : Integer); 1; end
+    def foo(a : Float); 1.0; end
+
+    x = foo(1)
+    y = foo(1.0)
+  ), environment: {
+    "x" => "Integer",
+    "y" => "Float"
+  }
+
 
   # Named parameters have their types set according to the given arguments.
   # This can cause the return type of a clause to change dynamically if the
