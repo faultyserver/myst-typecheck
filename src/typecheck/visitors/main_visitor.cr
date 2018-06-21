@@ -92,6 +92,24 @@ module Myst
         value_type
       end
 
+      # Since OpAssigns are generally just a shorthand from `a op= b` to either
+      # `a = a op b` or `a op a = b`, the typechecker can do a syntactic
+      # replacement to get the same result.
+      def visit(node : OpAssign)
+        op_expansion =
+          case op = node.op[0..-2]
+          when "||"
+            Or.new(node.target, SimpleAssign.new(node.target, node.value))
+          when "&&"
+            And.new(node.target, SimpleAssign.new(node.target, node.value))
+          else
+            Call.new(node.target, op, [node.value])
+          end
+
+        full_expansion = SimpleAssign.new(node.target, op_expansion)
+        visit(full_expansion)
+      end
+
 
       # Merging of conditional scopes is complex. For any given variable,
       # if every clause in the conditional has an assignment to it, then the
