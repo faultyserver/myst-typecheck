@@ -38,6 +38,30 @@ module Myst
         end
       end
 
+      def visit(node : FunctionCapture)
+        captured =
+          case target = node.value
+          when Call
+            receiver = env.current_self
+            if target.receiver?
+              receiver = visit(target.receiver)
+            end
+
+            env.push_self(receiver)
+            functor = env.current_scope[target.name]
+            env.pop_self
+
+            functor
+          else
+            env.t_nil
+          end
+
+        unless captured.is_a?(Functor)
+          raise "Function capture target is not a Functor (got `#{captured}` instead)"
+        end
+        captured
+      end
+
 
       # def visit(node : Const | Var | Underscore)
       def visit(node : StaticAssignable)
