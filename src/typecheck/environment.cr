@@ -1,29 +1,34 @@
+require "./primitive_types.cr"
+
 module Myst
   module TypeCheck
     class Environment
       property scope_stack : Array(Scope)
       property self_stack : Array(Type)
 
+      include PrimitiveTypes
+
       def initialize
         root = Type.new("main")
         create_root_scope(root.scope)
         @scope_stack = [] of Scope
         @self_stack = [root] of Type
+        init_primitives
       end
 
       def create_root_scope(root)
-        root["Object"]  = T_OBJECT_T
-        root["Nil"]     = T_NIL_T
-        root["Boolean"] = T_BOOLEAN_T
-        root["Integer"] = T_INTEGER_T
-        root["Float"]   = T_FLOAT_T
-        root["String"]  = T_STRING_T
-        root["Symbol"]  = T_SYMBOL_T
-        root["List"]    = T_LIST_T
-        root["Map"]     = T_MAP_T
-        root["Type"]    = T_TYPE_T
-        root["Module"]  = T_MODULE_T
-        root["Functor"] = T_FUNCTOR_T
+        root["Object"]  = t_object_t
+        root["Nil"]     = t_nil_t
+        root["Boolean"] = t_boolean_t
+        root["Integer"] = t_integer_t
+        root["Float"]   = t_float_t
+        root["String"]  = t_string_t
+        root["Symbol"]  = t_symbol_t
+        root["List"]    = t_list_t
+        root["Map"]     = t_map_t
+        root["Type"]    = t_type_t
+        root["Module"]  = t_module_t
+        root["Functor"] = t_functor_t
       end
 
 
@@ -48,9 +53,9 @@ module Myst
         @scope_stack.pop
       end
 
-      def merge_scope(unionize=true, nilify=false)
+      def merge_scope!(unionize=true, nilify=false)
         scope = pop_scope
-        current_scope.merge!(scope, unionize: unionize, nilify: nilify)
+        current_scope.merge!(scope, unionize: unionize, nilify: nilify ? t_nil : nil)
       end
 
 

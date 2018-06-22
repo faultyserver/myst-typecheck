@@ -2,54 +2,59 @@ require "./type.cr"
 
 module Myst
   module TypeCheck
-    T_ANY = AnyType.new
+    module PrimitiveTypes
+      getter t_any          = AnyType.new
 
-    T_OBJECT_T  = Type.new("Type(Object)")
-    T_OBJECT    = Type.new("Object", static_type: T_OBJECT_T)
-    T_OBJECT_T.instance_type = T_OBJECT
+      getter t_object_t     = Type.new("Type(Object)")
+      getter t_object       = Type.new("Object", static_type: @t_object_t)
 
-    T_NIL_T  = Type.new("Type(Nil)")
-    T_NIL    = Type.new("Nil", static_type: T_NIL_T)
-    T_NIL_T.instance_type = T_NIL
+      getter t_nil_t        = Type.new("Type(Nil)")
+      getter t_nil          = Type.new("Nil", static_type: @t_nil_t)
 
-    T_BOOLEAN_T  = Type.new("Type(Boolean)")
-    T_BOOLEAN    = Type.new("Boolean", static_type: T_BOOLEAN_T)
-    T_BOOLEAN_T.instance_type = T_BOOLEAN
+      getter t_boolean_t    = Type.new("Type(Boolean)")
+      getter t_boolean      = Type.new("Boolean", static_type: @t_boolean_t)
 
-    T_INTEGER_T  = Type.new("Type(Integer)")
-    T_INTEGER    = Type.new("Integer", static_type: T_INTEGER_T)
-    T_INTEGER_T.instance_type = T_INTEGER
+      getter t_integer_t    = Type.new("Type(Integer)")
+      getter t_integer      = Type.new("Integer", static_type: @t_integer_t)
 
-    T_FLOAT_T  = Type.new("Type(Float)")
-    T_FLOAT    = Type.new("Float", static_type: T_FLOAT_T)
-    T_FLOAT_T.instance_type = T_FLOAT
+      getter t_float_t      = Type.new("Type(Float)")
+      getter t_float        = Type.new("Float", static_type: @t_float_t)
 
-    T_STRING_T  = Type.new("Type(String)")
-    T_STRING    = Type.new("String", static_type: T_STRING_T)
-    T_STRING_T.instance_type = T_STRING
+      getter t_string_t     = Type.new("Type(String)")
+      getter t_string       = Type.new("String", static_type: @t_string_t)
 
-    T_SYMBOL_T  = Type.new("Type(Symbol)")
-    T_SYMBOL    = Type.new("Symbol", static_type: T_SYMBOL_T)
-    T_SYMBOL_T.instance_type = T_SYMBOL
+      getter t_symbol_t     = Type.new("Type(Symbol)")
+      getter t_symbol       = Type.new("Symbol", static_type: @t_symbol_t)
 
-    T_LIST_T  = Type.new("Type(List)")
-    T_LIST    = Type.new("List", static_type: T_LIST_T)
-    T_LIST_T.instance_type = T_LIST
+      getter t_list_t       = Type.new("Type(List)")
+      getter t_list         = Type.new("List", static_type: @t_list_t)
 
-    T_MAP_T  = Type.new("Type(Map)")
-    T_MAP    = Type.new("Map", static_type: T_MAP_T)
-    T_MAP_T.instance_type = T_MAP
+      getter t_map_t        = Type.new("Type(Map)")
+      getter t_map          = Type.new("Map", static_type: @t_map_t)
 
-    T_TYPE_T  = Type.new("Type(Type)")
-    T_TYPE    = Type.new("Type", static_type: T_TYPE_T)
-    T_TYPE_T.instance_type = T_TYPE
+      getter t_type_t       = Type.new("Type(Type)")
+      getter t_type         = Type.new("Type", static_type: @t_type_t)
 
-    T_MODULE_T  = Type.new("Type(Module)")
-    T_MODULE    = Type.new("Module", static_type: T_MODULE_T)
-    T_MODULE_T.instance_type = T_MODULE
+      getter t_module_t  = Type.new("Type(Module)")
+      getter t_module    = Type.new("Module", static_type: @t_module_t)
 
-    T_FUNCTOR_T  = Type.new("Type(Functor)")
-    T_FUNCTOR    = Type.new("Functor", static_type: T_FUNCTOR_T)
-    T_FUNCTOR_T.instance_type = T_FUNCTOR
+      getter t_functor_t  = Type.new("Type(Functor)")
+      getter t_functor    = Type.new("Functor", static_type: @t_functor_t)
+
+      def init_primitives
+        t_object_t.instance_type    = t_object
+        t_nil_t.instance_type       = t_nil
+        t_boolean_t.instance_type   = t_boolean
+        t_integer_t.instance_type   = t_integer
+        t_float_t.instance_type     = t_float
+        t_string_t.instance_type    = t_string
+        t_symbol_t.instance_type    = t_symbol
+        t_list_t.instance_type      = t_list
+        t_map_t.instance_type       = t_map
+        t_type_t.instance_type      = t_type
+        t_module_t.instance_type    = t_module
+        t_functor_t.instance_type   = t_functor
+      end
+    end
   end
 end

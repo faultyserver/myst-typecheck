@@ -152,4 +152,53 @@ describe "Call" do
 
     foo("hello")
   ), "String"
+
+
+
+  # Calls with receivers perform lookups based on the type of the receiver.
+  it_types %q(
+    deftype Integer
+      def +(other : Integer); 1; end
+    end
+
+    1 + 1
+  ), "Integer"
+
+  # If that receiver is a union type, lookup is performed on all types included
+  # in the union.
+  it_types %q(
+    deftype Integer
+      def something; nil; end
+    end
+
+    deftype Boolean
+      def something; :yes; end
+    end
+
+    (false || 1).something
+  ), "Nil | Symbol"
+
+  # If any member of the receiver's type union does not have a potentially-
+  # successful match for it, the typechecker fails.
+  it_does_not_type %q(
+    deftype Integer
+      def something; nil; end
+    end
+
+    (false || 1).something
+  )
+
+  # Even if all types respond to the method name, they must also have matching
+  # clauses to be considered valid.
+  it_does_not_type %q(
+    deftype Integer
+      def something; nil; end
+    end
+
+    deftype Boolean
+      def something(a, b); nil; end
+    end
+
+    (false || 1).something
+  )
 end

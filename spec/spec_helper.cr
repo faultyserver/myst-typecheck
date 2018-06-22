@@ -6,14 +6,14 @@ require "../src/typecheck.cr"
 # that would be used to refer to that type in the given program.
 def it_types(source : String, type_name : String, line=__LINE__, file=__FILE__, end_line=__END_LINE__)
   it "types `#{source}` as `#{type_name}`", line: line, file: file, end_line: end_line do
-    env, result = Myst::TypeCheck.typecheck(source)
+    env, result = typecheck(source)
     result.name.should eq(type_name)
   end
 end
 
 def it_types(source : String, *, environment : Hash(String, String), line=__LINE__, file=__FILE__, end_line=__END_LINE__)
   it "types the environment of `#{source}`", line: line, file: file, end_line: end_line do
-    env, result = Myst::TypeCheck.typecheck(source)
+    env, result = typecheck(source)
     environment.each do |name, type|
       env.current_scope[name].name.should eq(type)
     end
@@ -23,7 +23,7 @@ end
 def it_does_not_type(source : String, message : Regex?=nil, line=__LINE__, file=__FILE__, end_line=__END_LINE__)
   it "raises an error when typing `#{source}`", line: line, file: file, end_line: end_line do
     error = expect_raises(Exception) do
-      Myst::TypeCheck.typecheck(source)
+      typecheck(source)
     end
 
     if message

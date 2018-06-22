@@ -13,70 +13,70 @@ module Myst
 
 
       def match(node : NilLiteral, type : Type)
-        unless type.includes?(T_NIL)
+        unless type.includes?(env.t_nil)
           raise "match pattern of `nil` will never match value type of #{type}"
         end
       end
 
       def match(node : BooleanLiteral, type : Type)
-        unless type.includes?(T_BOOLEAN)
+        unless type.includes?(env.t_boolean)
           raise "match pattern of `#{node.value}` will never match value type of #{type}"
         end
       end
 
       def match(node : IntegerLiteral, type : Type)
-        unless type.includes?(T_INTEGER)
+        unless type.includes?(env.t_integer)
           raise "match pattern of `#{node.value}` will never match value type of #{type}"
         end
       end
 
       def match(node : FloatLiteral, type : Type)
-        unless type.includes?(T_FLOAT)
+        unless type.includes?(env.t_float)
           raise "match pattern of `#{node.value}` will never match value type of #{type}"
         end
       end
 
       def match(node : StringLiteral, type : Type)
-        unless type.includes?(T_STRING)
+        unless type.includes?(env.t_string)
           raise "match pattern of `#{node.value}` will never match value type of #{type}"
         end
       end
 
       def match(node : InterpolatedStringLiteral, type : Type)
-        unless type.includes?(T_NIL)
+        unless type.includes?(env.t_nil)
           raise "interpolated string literal match pattern will never match value type of #{type}"
         end
       end
 
       def match(node : SymbolLiteral, type : Type)
-        unless type.includes?(T_SYMBOL)
+        unless type.includes?(env.t_symbol)
           raise "match pattern of `:#{node.value}` will never match value type of #{type}"
         end
       end
 
       def match(node : ListLiteral, type : Type)
-        unless type.includes?(T_LIST)
+        unless type.includes?(env.t_list)
           raise "list literal match pattern will never match value type of #{type}"
         end
 
         node.elements.each do |elem|
-          match(elem, T_ANY)
+          match(elem, env.t_any)
         end
       end
 
       def match(node : MapLiteral, type : Type)
-        unless type.includes?(T_MAP)
+        unless type.includes?(env.t_map)
           raise "map literal match pattern will never match value type of #{type}"
         end
 
         node.entries.each do |entry|
-          match(entry.value, T_ANY)
+          match(entry.value, env.t_any)
         end
       end
 
 
       def match(node : Splat, type : Type)
-        match(node.value, T_LIST)
+        match(node.value, env.t_list)
       end
 
 
@@ -93,7 +93,7 @@ module Myst
       end
 
       def match(node : IVar, type : Type)
-        env.current_self.scope[node.name] ||= T_ANY
+        env.current_self.scope[node.name] ||= env.t_any
       end
     end
   end

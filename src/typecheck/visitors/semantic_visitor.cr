@@ -8,12 +8,12 @@ module Myst
 
       def visit(node : Node)
         node.accept_children(self)
-        return T_NIL
+        return env.t_nil
       end
 
 
       private def __is_maybe_falsey?(type)
-        type.includes?(T_NIL) || type.includes?(T_BOOLEAN) || type == T_ANY
+        type.includes?(env.t_nil) || type.includes?(env.t_boolean) || type == env.t_any
       end
 
       private def __make_type(name : String)

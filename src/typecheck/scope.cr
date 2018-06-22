@@ -47,7 +47,7 @@ module Myst
       #
       # `nilify_left` is similar to `nilify`, but only unions with Nil if the
       # key does not exist in the left hand side.
-      def merge!(other : Scope, *, unionize=true, nilify=false)
+      def merge!(other : Scope, *, unionize=true, nilify nil_type : Type? = nil)
         (keys | other.keys).each do |key|
           left = self[key]?
           that = other[key]?
@@ -56,9 +56,9 @@ module Myst
             when left && that
               unionize ? left.union_with(that) : that
             when left
-              nilify ? left.union_with(T_NIL) : left
+              nil_type ? left.union_with(nil_type) : left
             when that
-              nilify ? that.union_with(T_NIL) : that
+              nil_type ? that.union_with(nil_type) : that
             else
               raise "Unreachable error reached while merging scopes."
             end
