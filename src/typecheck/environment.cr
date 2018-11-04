@@ -1,12 +1,50 @@
-require "./primitive_types.cr"
-
 module Myst
   module TypeCheck
     class Environment
       property scope_stack : Array(Scope)
       property self_stack : Array(Type)
 
-      include PrimitiveTypes
+      # Crystal's macro evaluation doesn't let this block of definitions live
+      # anywhere but in the original definition of this class. Not even in a
+      # macro that gets called here.
+      getter t_any          = AnyType.new
+
+      getter t_object_t     = Type.new("Type(Object)")
+      getter t_object       = Type.new("Object")
+
+      getter t_nil_t        = Type.new("Type(Nil)")
+      getter t_nil          = Type.new("Nil")
+
+      getter t_boolean_t    = Type.new("Type(Boolean)")
+      getter t_boolean      = Type.new("Boolean")
+
+      getter t_integer_t    = Type.new("Type(Integer)")
+      getter t_integer      = Type.new("Integer")
+
+      getter t_float_t      = Type.new("Type(Float)")
+      getter t_float        = Type.new("Float")
+
+      getter t_string_t     = Type.new("Type(String)")
+      getter t_string       = Type.new("String")
+
+      getter t_symbol_t     = Type.new("Type(Symbol)")
+      getter t_symbol       = Type.new("Symbol")
+
+      getter t_list_t       = Type.new("Type(List)")
+      getter t_list         = Type.new("List")
+
+      getter t_map_t        = Type.new("Type(Map)")
+      getter t_map          = Type.new("Map")
+
+      getter t_type_t       = Type.new("Type(Type)")
+      getter t_type         = Type.new("Type")
+
+      getter t_module_t  = Type.new("Type(Module)")
+      getter t_module    = Type.new("Module")
+
+      getter t_functor_t  = Type.new("Type(Functor)")
+      getter t_functor    = Type.new("Functor")
+
 
       def initialize
         root = Type.new("main")
@@ -16,19 +54,46 @@ module Myst
         init_primitives
       end
 
+      def init_primitives
+        t_object_t.instance_type    = t_object
+        t_object.static_type        = t_object_t
+        t_nil_t.instance_type       = t_nil
+        t_nil.static_type           = t_nil_t
+        t_boolean_t.instance_type   = t_boolean
+        t_boolean.static_type       = t_boolean_t
+        t_integer_t.instance_type   = t_integer
+        t_integer.static_type       = t_integer_t
+        t_float_t.instance_type     = t_float
+        t_float.static_type         = t_float_t
+        t_string_t.instance_type    = t_string
+        t_string.static_type        = t_string_t
+        t_symbol_t.instance_type    = t_symbol
+        t_symbol.static_type        = t_symbol_t
+        t_list_t.instance_type      = t_list
+        t_list.static_type          = t_list_t
+        t_map_t.instance_type       = t_map
+        t_map.static_type           = t_map_t
+        t_type_t.instance_type      = t_type
+        t_type.static_type          = t_type_t
+        t_module_t.instance_type    = t_module
+        t_module.static_type        = t_module_t
+        t_functor_t.instance_type   = t_functor
+        t_functor.static_type       = t_functor_t
+      end
+
       def create_root_scope(root)
-        root["Object"]  = t_object_t
-        root["Nil"]     = t_nil_t
-        root["Boolean"] = t_boolean_t
-        root["Integer"] = t_integer_t
-        root["Float"]   = t_float_t
-        root["String"]  = t_string_t
-        root["Symbol"]  = t_symbol_t
-        root["List"]    = t_list_t
-        root["Map"]     = t_map_t
-        root["Type"]    = t_type_t
-        root["Module"]  = t_module_t
-        root["Functor"] = t_functor_t
+        root["Object"]  = @t_object_t
+        root["Nil"]     = @t_nil_t
+        root["Boolean"] = @t_boolean_t
+        root["Integer"] = @t_integer_t
+        root["Float"]   = @t_float_t
+        root["String"]  = @t_string_t
+        root["Symbol"]  = @t_symbol_t
+        root["List"]    = @t_list_t
+        root["Map"]     = @t_map_t
+        root["Type"]    = @t_type_t
+        root["Module"]  = @t_module_t
+        root["Functor"] = @t_functor_t
       end
 
 

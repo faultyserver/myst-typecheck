@@ -67,3 +67,19 @@ describe "Mixed Or/And" do
   # (Nil || Integer) && Nil  ->  Integer && Nil  ->  Nil
   it_types %q((nil || 1) && nil),     "Nil"
 end
+
+
+describe "Not" do
+  # The only possible result of a Not expression should be a boolean value.
+  # Not is currently an overrideable boolean operator, though in practice
+  # it is not overridden, and even when it is it should return a boolean.
+  # This could be expanded to work like a normal Call, or maybe the
+  # language will change to disallow overriding the operator.
+  it_types %q(!1),        "Boolean"
+  it_types %q(!false),    "Boolean"
+  it_types %q(!(1 + 2)),  "Boolean"
+  it_types %q(!"hello"),  "Boolean"
+  it_types %q(!nil),      "Boolean"
+  it_types %q(![]),       "Boolean"
+  it_types %q(!{}),       "Boolean"
+end

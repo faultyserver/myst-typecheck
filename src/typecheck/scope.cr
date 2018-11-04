@@ -17,7 +17,7 @@ module Myst
         if parent?
           fetch(key, nil) || parent[key]
         else
-          fetch(key)
+          super(key)
         end
       end
 

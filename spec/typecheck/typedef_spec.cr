@@ -55,7 +55,7 @@ describe "TypeDef" do
     ))
 
     base_foo  = env.current_scope["Foo"]
-    foo_foo   = base_foo.scope.fetch("Foo")
+    foo_foo   = base_foo.scope["Foo"]
     base_foo.should_not eq(foo_foo)
   end
 
@@ -67,7 +67,7 @@ describe "TypeDef" do
     ))
 
     base_foo  = env.current_scope["Foo"]
-    foo_foo   = base_foo.scope.fetch("Foo")
+    foo_foo   = base_foo.scope["Foo"]
     base_foo.should_not eq(foo_foo)
   end
 
@@ -81,7 +81,7 @@ describe "TypeDef" do
 
     base_foo  = env.current_scope["Foo"]
     bar       = env.current_scope["Bar"]
-    bar_foo   = bar.scope.fetch("Foo")
+    bar_foo   = bar.scope["Foo"]
     base_foo.should_not eq(bar_foo)
   end
 end

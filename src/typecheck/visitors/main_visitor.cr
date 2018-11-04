@@ -304,6 +304,14 @@ module Myst
         end
       end
 
+      # Not is currently an overrideable boolean operator, though in practice
+      # it is not overridden, and even when it is it should return a boolean.
+      # This could be expanded to work like a normal Call, or maybe the
+      # language will change to disallow overriding the operator.
+      def visit(node : Not)
+        env.t_boolean
+      end
+
 
       def visit(node : Splat)
         visit(node.value)

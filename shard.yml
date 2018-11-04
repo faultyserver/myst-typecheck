@@ -1,6 +1,6 @@
 name: myst-typecheck
 version: 0.0.1
-crystal: 0.24.2
+crystal: 0.27.0
 license: MIT
 authors:
   - Jon Egeland <jonegeland@gmail.com>
@@ -11,5 +11,6 @@ targets:
 
 dependencies:
   myst:
-    github: faultyserver/myst
-    commit: 29c31a9
+    github: myst-lang/myst
+    # Needed for return types
+    commit: 32c2a6896ea2e1897ec519853844e30b58326ee1
