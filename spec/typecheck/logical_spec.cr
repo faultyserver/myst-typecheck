@@ -73,8 +73,11 @@ describe "Not" do
   # The only possible result of a Not expression should be a boolean value.
   # Not is currently an overrideable boolean operator, though in practice
   # it is not overridden, and even when it is it should return a boolean.
-  # This could be expanded to work like a normal Call, or maybe the
-  # language will change to disallow overriding the operator.
+  #
+  # NOTE: This is an intentional deviation from the current behavior of Myst
+  # itself. Realistically, allowing the override of the Not operation
+  # (`!expr`) is not useful and causes unnecessary confusion and inconsistency
+  # when done in multiple places.
   it_types %q(!1),        "Boolean"
   it_types %q(!false),    "Boolean"
   it_types %q(!(1 + 2)),  "Boolean"
@@ -82,4 +85,25 @@ describe "Not" do
   it_types %q(!nil),      "Boolean"
   it_types %q(![]),       "Boolean"
   it_types %q(!{}),       "Boolean"
+end
+
+
+describe "Negation" do
+  # The typechecker's implementation of Negation works as a redirect to a Call
+  # to the `negate` method on the target value.
+  it_types %q(
+    deftype Integer; def negate; 1; end; end
+    -1
+  ), "Integer"
+
+  it_types %q(
+    deftype Foo; def negate; "hello"; end; end
+    -%Foo{}
+  ), "String"
+
+  # The `negate` method should take no arguments.
+  it_does_not_type %q(
+    deftype Integer; def negate(a); 1; end; end
+    -1
+  ), /no matching clause/
 end

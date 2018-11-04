@@ -314,8 +314,20 @@ module Myst
       # it is not overridden, and even when it is it should return a boolean.
       # This could be expanded to work like a normal Call, or maybe the
       # language will change to disallow overriding the operator.
+      #
+      # NOTE: This is an intentional deviation from the current behavior of Myst
+      # itself. Realistically, allowing the override of the Not operation
+      # (`!expr`) is not useful and causes unnecessary confusion and inconsistency
+      # when done in multiple places.
       def visit(node : Not)
         env.t_boolean
+      end
+
+      def visit(node : Negation)
+        visit(Call.new(
+          receiver: node.value,
+          name: "negate"
+        ))
       end
 
 
