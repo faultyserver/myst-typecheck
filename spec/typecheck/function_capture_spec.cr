@@ -46,7 +46,40 @@ describe "Function Captures" do
     bar(1, 2)
   ), "Integer"
 
+  # Captured functions, when assigned to variables, act just like any other
+  # normal variable. Without explicitly writing them as Calls (with
+  # parentheses), the functor does not get called.
+  it_types %q(
+    def foo(a, b); b; end
+    bar = &foo
+    bar
+  ), "Functor(foo)"
+
+
+  # AnonymousFunctions are similar to FunctionCaptures, where the resulting
+  # type is just the full Functor being defined.
+  #
+  # The name of an AnonymousFunction's Functor type is created using the file
+  # location of the definition.
+  it_types %q(
+    fn ->() { } end
+  ), /Functor\(.+eval_input:2:5\)/
+
+  it_types %q(
+    fn
+      ->() { }
+      ->(a, b) { a + b }
+    end
+  ), /Functor\(.+eval_input:2:5\)/
+
+
+  # Assigning an anonymous function to a variable acts just like a function
+  # capture to that variable.
+  it_types %q(
+    bar = fn ->(a, b) { b } end
+    bar(1, 2)
+  ), "Integer"
+
   # TODO:
-  #   - Add support for anonymous functions.
   #   ? Test block parameters
 end

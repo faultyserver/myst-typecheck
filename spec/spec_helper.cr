@@ -10,6 +10,12 @@ def it_types(source : String, type_name : String, line=__LINE__, file=__FILE__, 
     result.name.should eq(type_name)
   end
 end
+def it_types(source : String, type_name : Regex, line=__LINE__, file=__FILE__, end_line=__END_LINE__)
+  it "types `#{source}` as `#{type_name}`", line: line, file: file, end_line: end_line do
+    env, result = typecheck(source)
+    result.name.should match(type_name)
+  end
+end
 
 def it_types(source : String, *, environment : Hash(String, String), line=__LINE__, file=__FILE__, end_line=__END_LINE__)
   it "types the environment of `#{source}`", line: line, file: file, end_line: end_line do

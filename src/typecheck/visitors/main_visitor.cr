@@ -378,6 +378,12 @@ module Myst
         end
       end
 
+      def visit(node : AnonymousFunction)
+        functor = Functor.new(node.location.to_s)
+        node.clauses.each{ |c| functor.add_clause(c) }
+        functor
+      end
+
 
       def visit(node : ModuleDef)
         module_type = env.current_scope[node.name]
@@ -394,6 +400,7 @@ module Myst
         env.pop_self
         static
       end
+
 
       def visit(node : TypeUnion)
         # Currently, the only valid use of a TypeUnion is as a parameter or
