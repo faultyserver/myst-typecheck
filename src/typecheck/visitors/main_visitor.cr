@@ -52,6 +52,12 @@ module Myst
             env.pop_self
 
             functor
+          # Local variables can be used in captures as passthroughs for block
+          # parameters.
+          when StaticAssignable
+            env.current_scope[target.name]
+          when AnonymousFunction
+            visit(target)
           else
             env.t_nil
           end
@@ -349,8 +355,9 @@ module Myst
       private def visit_single_type_call(receiver, node)
         functor = env.current_scope[node.name].as(Functor)
         arguments = node.args.map{ |arg| visit(arg) }
+        block = node.block? ? visit(node.block) : nil
 
-        clauses = matching_clauses_for_functor(functor, arguments)
+        clauses = matching_clauses_for_functor(functor, arguments, block)
 
         if clauses.size == 0
           raise "No matching clause for Call to #{node.name}"
@@ -360,7 +367,7 @@ module Myst
         # could match the given arguments.
         clause_types = clauses.map do |c|
           env.push_scope
-          assign_args(c, arguments)
+          assign_args(c, arguments, block)
           result = visit(c.body)
           env.pop_scope
           result
@@ -376,6 +383,10 @@ module Myst
         else
           env.current_self.instance_type.scope[node.name]
         end
+      end
+
+      def visit(node : Block)
+        Functor.new(node.location.to_s).add_clause(node)
       end
 
       def visit(node : AnonymousFunction)
@@ -428,7 +439,7 @@ module Myst
 
       # Iterate the clauses of the given functor, attempting to match all of
       # the given arguments. Returns the clauses that successfully match.
-      private def matching_clauses_for_functor(functor : Functor, arguments : Array(Type))
+      private def matching_clauses_for_functor(functor : Functor, arguments : Array(Type), block : Type?)
         functor.clauses.select do |clause|
           next unless clause.params.size == arguments.size
 
@@ -440,16 +451,26 @@ module Myst
             end
           end
 
-          typed_params.zip(arguments).all? do |(param, arg)|
-            types_overlap?(param, arg)
-          end
+          all_params_match =
+            typed_params.zip(arguments).all? do |(param, arg)|
+              types_overlap?(param, arg)
+            end
+
+          block_matches =
+            if clause.block_param?
+              !!block
+            else
+              !block
+            end
+
+          all_params_match && block_matches
         end
       end
 
 
       # Iterate the clause parameters and set their values to the corresponding
       # values in the arguments array.
-      private def assign_args(clause : Functor::Clause, arguments : Array(Type))
+      private def assign_args(clause : Functor::Clause, arguments : Array(Type), block : Type?)
         clause.params.size.times do |idx|
           param = clause.params[idx]
           arg = arguments[idx]
@@ -457,6 +478,10 @@ module Myst
           if param.name?
             env.current_scope[param.name] = arg
           end
+        end
+
+        if (block_param = clause.block_param?) && block
+          env.current_scope[block_param.name] = block
         end
       end
 

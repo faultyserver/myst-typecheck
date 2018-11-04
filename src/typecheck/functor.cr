@@ -10,7 +10,7 @@ module Myst
         def initialize(@node : Def)
         end
 
-        delegate body, params, to: node
+        delegate body, params, block_param, block_param?, to: node
       end
 
 
