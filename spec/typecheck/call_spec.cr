@@ -201,4 +201,35 @@ describe "Call" do
 
     (false || 1).something
   )
+
+
+  # Calls can also be performed off of arbitrary expressions, in which case the
+  # expression must resolve to a Functor.
+  it_types %q(
+    def foo; 1; end
+    (&foo)()
+  ), "Integer"
+
+  it_types %q(
+    def bar; 1; end
+    def foo; &bar; end
+
+    foo()()
+  ), "Integer"
+
+  # Immediate invocation of an AnonymousFunction is a Call to an expression.
+  it_types %q(
+    (fn ->(a) { a } end)(1)
+  ), "Integer"
+
+  it_does_not_type %q(
+    (1)()
+  ), /did not resolve to a callable object/
+
+  # The expression raises an error if there is any chance that the expression is
+  # not a Functor.
+  it_does_not_type %q(
+    def foo; 1; end
+    (false || (&foo))()
+  ), /did not resolve to a callable object/
 end

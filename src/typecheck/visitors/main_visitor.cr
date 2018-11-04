@@ -353,7 +353,18 @@ module Myst
 
 
       private def visit_single_type_call(receiver, node)
-        functor = env.current_scope[node.name].as(Functor)
+        functor =
+          case name = node.name
+          when Node
+            f = visit(name)
+            unless f.is_a?(Functor)
+              raise "Expression for Call did not resolve to a Callable object (was #{f})"
+            end
+            f
+          else
+            env.current_scope[name].as(Functor)
+          end
+
         arguments = node.args.map{ |arg| visit(arg) }
         block = node.block? ? visit(node.block) : nil
 
@@ -393,6 +404,16 @@ module Myst
         functor = Functor.new(node.location.to_s)
         node.clauses.each{ |c| functor.add_clause(c) }
         functor
+      end
+
+
+      def visit(node : Match)
+        visit(Call.new(nil,
+          name: AnonymousFunction.new(node.clauses, internal_name: "match").at(node),
+          args: node.arguments,
+          block: nil,
+          infix: false
+        ).at(node))
       end
 
 
