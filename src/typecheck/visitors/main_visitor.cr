@@ -476,6 +476,12 @@ module Myst
         env.add_return_type(node_type)
       end
 
+      # Next is currently a semantic equivalent of Return.
+      def visit(node : Next)
+        node_type = visit(node.value)
+        env.add_return_type(node_type)
+      end
+
 
 
       # Iterate the clauses of the given functor, attempting to match all of
