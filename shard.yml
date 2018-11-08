@@ -7,7 +7,7 @@ authors:
 
 targets:
   myst-typecheck:
-    main: src/typecheck.cr
+    main: src/typecheck_cli.cr
 
 dependencies:
   myst:

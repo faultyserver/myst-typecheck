@@ -8,6 +8,11 @@ module Myst
   module TypeCheck
     extend self
 
+    def typecheck(file_name : String)
+      program = ::Myst::Parser.for_file(file_name).parse
+      typecheck(program)
+    end
+
     def typecheck(program : Node) : Tuple(Environment, Type)
       env = Environment.new
 
