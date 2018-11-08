@@ -9,9 +9,15 @@ describe "Function Captures" do
   # captured.
   it_types %q(
     def foo; end
-
     &foo
   ), "Functor(foo)"
+
+  # Trying to capture a function that does not exist raises an error.
+  it_does_not_type %q(&bar), /no function with the name `bar` exists for type `main`/
+  it_does_not_type %q(
+    deftype Foo; end
+    &Foo.bar
+  ), /no function with the name `bar` exists for type `type\(foo\)`/
 
   # Capturing allows reaching into modules, types, and instances to pull out
   # functions.
@@ -76,14 +82,14 @@ describe "Function Captures" do
   # location of the definition.
   it_types %q(
     fn ->() { } end
-  ), /Functor\(.+eval_input:2:5\)/
+  ), /Functor\(.+foo.mt:2:5\)/, fake_file="foo.mt"
 
   it_types %q(
     fn
       ->() { }
       ->(a, b) { a + b }
     end
-  ), /Functor\(.+eval_input:2:5\)/
+  ), /Functor\(.+foo.mt:2:5\)/, fake_file="foo.mt"
 
 
   # Assigning an anonymous function to a variable acts just like a function
@@ -98,7 +104,7 @@ describe "Function Captures" do
   it_types %q(
     def foo(proc); proc; end
     foo(fn ->() { } end)
-  ), /Functor\(.+eval_input:3:9\)/
+  ), /Functor\(.+foo.mt:3:9\)/, fake_file="foo.mt"
 
 
   # Block parameters are evaluated at the argument side of a Call. Similar to
@@ -109,13 +115,13 @@ describe "Function Captures" do
   it_types %q(
     def foo(&block); block; end
     foo{ 2 }
-  ), /Functor\(.+eval_input:3:8\)/
+  ), /Functor\(.+foo.mt:3:8\)/, fake_file="foo.mt"
   it_types %q(
     def foo(&block); block; end
     foo do
       2
     end
-  ), /Functor\(.+eval_input:3:9\)/
+  ), /Functor\(.+foo.mt:3:9\)/, fake_file="foo.mt"
 
   # Calling a function that does not accept a block with a block parameter is
   # considered a non-match.
@@ -148,7 +154,7 @@ describe "Function Captures" do
   it_types %q(
     def foo(&block); block; end
     foo(&fn ->() { } end)
-  ), /Functor\(.+eval_input:3:10\)/
+  ), /Functor\(.+foo.mt:3:10\)/, fake_file="foo.mt"
 
   it_types %q(
     def foo(&block); block; end
@@ -156,7 +162,7 @@ describe "Function Captures" do
       ->() { }
       ->(a) { a }
     end)
-  ), /Functor\(.+eval_input:3:10\)/
+  ), /Functor\(.+foo.mt:3:10\)/, fake_file="foo.mt"
 
   it_does_not_type %q(
     def foo(); 1; end

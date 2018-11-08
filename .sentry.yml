@@ -9,5 +9,5 @@ info: true
 build: crystal spec || echo ''
 run: echo ''
 watch:
-  - ./src/typecheck/**/*.cr
+  - ./src/**/*.cr
   - ./spec/**/*.cr

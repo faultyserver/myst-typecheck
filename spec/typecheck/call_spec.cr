@@ -39,6 +39,17 @@ describe "Call" do
     foo()
   ), "Nil"
 
+  # If no function with the given name exists, a "does not exist" error is raised.
+  it_does_not_type %q(bar()), /no function with the name `bar` exists for type `main`/
+  it_does_not_type %q(
+    deftype Foo; end
+    Foo.bar()
+  ), /no function with the name `bar` exists for type `type\(foo\)`/
+  it_does_not_type %q(
+    deftype Foo; end
+    %Foo{}.bar()
+  ), /no function with the name `bar` exists for type `foo`/
+
 
   # With arguments, clauses can potentially not match. If no matching clause
   # for a Call is found for the given arguments, it should raise an error.

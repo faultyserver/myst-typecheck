@@ -48,14 +48,26 @@ module Myst
             end
 
             env.push_self(receiver)
-            functor = env.current_scope[target.name]
+            functor = env.current_scope[target.name]?
             env.pop_self
+
+            unless functor
+              raise "No function with the name `#{target.name}` exists for type `#{receiver}`"
+            end
 
             functor
           # Local variables can be used in captures as passthroughs for block
           # parameters.
           when StaticAssignable
-            env.current_scope[target.name]
+            receiver = env.current_self
+            functor = env.current_scope[target.name]?
+            unless functor
+              # This shouldn't be reachable. If the target is a
+              # `StaticAssignable`, it must at least exist as a local variable.
+              # The later `is_a?(Functor)` check should be enough.
+              raise "No function with the name `#{target.name}` exists in current scope"
+            end
+            functor
           when AnonymousFunction
             visit(target)
           else
@@ -366,13 +378,18 @@ module Myst
           case name = node.name
           when Node
             f = visit(name)
-            unless f.is_a?(Functor)
-              raise "Expression for Call did not resolve to a Callable object (was #{f})"
-            end
-            f
           else
-            env.current_scope[name].as(Functor)
+            f = env.current_scope[name]?
+            unless f
+              raise "No function with the name `#{name}` exists for type `#{receiver}`"
+            end
+
+            f
           end
+
+        unless functor.is_a?(Functor)
+          raise "Expression for Call did not resolve to a Callable object (was #{f})"
+        end
 
         arguments = node.args.map{ |arg| visit(arg) }
         block = node.block? ? visit(node.block) : nil
@@ -465,6 +482,24 @@ module Myst
 
         return given_type.instance_type
       end
+
+
+
+      def visit(node : Require)
+        # `required_tree` is set by the ProgramExpander that runs before
+        # this visitor when the expression results in new code being loaded.
+        # This ensures that subsequent visitors only see this code once in
+        # the process of scanning the entire program tree.
+        if node.required_tree?
+          visit(node.required_tree)
+        end
+
+        # `require` always returns either `true` or `false` depending on
+        # whether the expression resulted in new code being loaded. The
+        # side effects of the `require` do not affect the resulting type.
+        env.t_boolean
+      end
+
 
 
       # Return expressions have no immediate resulting type as they cause the
