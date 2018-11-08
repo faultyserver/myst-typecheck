@@ -347,15 +347,11 @@ module Myst
           case receiver
           when UnionType
             receiver.types.reduce([] of Type) do |acc, t|
-              env.push_self(t)
               acc.concat(visit_single_type_call(t, node))
-              env.pop_self
               acc
             end
           else
-            env.push_self(receiver)
             clause_types = visit_single_type_call(receiver, node)
-            env.pop_self
             clause_types
           end
 
@@ -365,6 +361,7 @@ module Myst
 
 
       private def visit_single_type_call(receiver, node)
+        env.push_self(receiver)
         functor =
           case name = node.name
           when Node
@@ -389,13 +386,14 @@ module Myst
         # The type result of a Call is the union type of all clauses that
         # could match the given arguments.
         clause_types = clauses.map do |c|
-          env.push_scope
+          env.push_scope()
           assign_args(c, arguments, block)
-          result = visit(c.body)
-          env.pop_scope
+          result = visit_clause(c.body)
+          env.pop_scope()
           result
         end
 
+        env.pop_self
         clause_types
       end
 
@@ -469,6 +467,16 @@ module Myst
       end
 
 
+      # Return expressions have no immediate resulting type as they cause the
+      # flow of execution to break. Instead, the type gets added to the current
+      # `return_type` of the Environment to be considered as part of the
+      # enclosing clause's return type.
+      def visit(node : Return)
+        node_type = visit(node.value)
+        env.add_return_type(node_type)
+      end
+
+
 
       # Iterate the clauses of the given functor, attempting to match all of
       # the given arguments. Returns the clauses that successfully match.
@@ -517,6 +525,23 @@ module Myst
           env.current_scope[block_param.name] = block
         end
       end
+
+      # This method assumes that all setup for visiting the clause has been
+      # performed already, including assigning parameters and pushing the
+      # receiver to the `self_stack`. This method takes care of managing the
+      # `return` and `break` stacks.
+      private def visit_clause(node : Node)
+        env.push_return_scope()
+        implicit_return_type = visit(node)
+        explicit_return_type = env.pop_return_scope()
+
+        if explicit_return_type
+          explicit_return_type.union_with(implicit_return_type)
+        else
+          implicit_return_type
+        end
+      end
+
 
       private def types_overlap?(type1, type2)
         case {type1, type2}

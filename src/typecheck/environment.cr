@@ -4,6 +4,9 @@ module Myst
       property scope_stack : Array(Scope)
       property self_stack : Array(Type)
 
+      property return_stack : Array(Type?)
+      property break_stack : Array(Type?)
+
       # Crystal's macro evaluation doesn't let this block of definitions live
       # anywhere but in the original definition of this class. Not even in a
       # macro that gets called here.
@@ -39,19 +42,23 @@ module Myst
       getter t_type_t       = Type.new("Type(Type)")
       getter t_type         = Type.new("Type")
 
-      getter t_module_t  = Type.new("Type(Module)")
-      getter t_module    = Type.new("Module")
+      getter t_module_t     = Type.new("Type(Module)")
+      getter t_module       = Type.new("Module")
 
-      getter t_functor_t  = Type.new("Type(Functor)")
-      getter t_functor    = Type.new("Functor")
+      getter t_functor_t    = Type.new("Type(Functor)")
+      getter t_functor      = Type.new("Functor")
 
 
       def initialize
         root = Type.new("main")
         create_root_scope(root.scope)
+        init_primitives
+
+        @return_stack = [nil] of Type?
+        @break_stack = [nil] of Type?
+
         @scope_stack = [] of Scope
         @self_stack = [root] of Type
-        init_primitives
       end
 
       def init_primitives
@@ -134,6 +141,32 @@ module Myst
 
       def pop_self
         @self_stack.pop
+      end
+
+
+      def current_return_type
+        @return_stack.last?
+      end
+
+      def push_return_scope
+        @return_stack.push(nil)
+      end
+
+      def pop_return_scope
+        @return_stack.pop
+      end
+
+      def set_return_type(type : Type)
+        @return_stack[-1] = type
+      end
+
+      def add_return_type(type : Type)
+        @return_stack[-1] =
+          if t = @return_stack.last?
+            t.union_with(type)
+          else
+            type
+          end
       end
     end
   end
