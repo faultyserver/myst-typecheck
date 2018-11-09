@@ -222,4 +222,62 @@ describe "Def" do
     #   end
     # end
   end
+
+
+  describe "return type restrictions" do
+    # Specifying a return type explicitly on a method definition creates a
+    # check on the type that results from calling that clause, and guarantees
+    # that the resulting type is the one given by the restriction.
+    it_types %q(
+      def foo : Integer;
+        1
+      end
+      foo()
+    ), "Integer"
+
+    it_types %q(
+      def foo(a) : Integer;
+        a
+      end
+      foo(1)
+    ), "Integer"
+
+    # If the resulting type from a Call does not match the restriction given by
+    # a definition, an error is raised.
+    it_does_not_type %q(
+      def foo : Integer;
+        "hello"
+      end
+
+      foo()
+    ), /expected call to return `Integer` but .+ `String`/i
+
+    # Each clause of a functor is considered individually when checking return
+    # type restrictions
+    it_types %q(
+      def foo(a : Integer) : Integer; 1; end
+      def foo(a : Symbol) : Symbol; :b; end
+      foo(1)
+      foo(:a)
+    ), "Symbol"
+
+    # Return types must be an exact match with the restriction type to succeed.
+    it_types %q(
+      def foo(a) : Integer | Nil
+        when a
+          1
+        end
+      end
+      foo(1)
+    ), "Integer | Nil"
+
+    # If the type is not an exact match, the typechecker should
+    # TODO: emit warnings.
+    it_does_not_type %q(
+      def foo(a) : Integer | Nil
+        1
+      end
+      foo(1)
+    ), /expected call to return `Integer | Nil` but .+ `Integer`/i
+  end
 end

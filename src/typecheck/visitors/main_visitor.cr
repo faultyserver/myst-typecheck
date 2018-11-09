@@ -1,4 +1,5 @@
 require "./semantic_visitor.cr"
+require "../exceptions.cr"
 
 module Myst
   module TypeCheck
@@ -405,7 +406,8 @@ module Myst
         clause_types = clauses.map do |c|
           env.push_scope()
           assign_args(c, arguments, block)
-          result = visit_clause(c.body)
+          return_restriction = c.return_type? ? visit(c.return_type).instance_type : nil
+          result = visit_clause(c.body, return_restriction)
           env.pop_scope()
           result
         end
@@ -571,16 +573,25 @@ module Myst
       # performed already, including assigning parameters and pushing the
       # receiver to the `self_stack`. This method takes care of managing the
       # `return` and `break` stacks.
-      private def visit_clause(node : Node)
+      private def visit_clause(node : Node, return_restriction : Type? = nil)
         env.push_return_scope()
         implicit_return_type = visit(node)
         explicit_return_type = env.pop_return_scope()
 
-        if explicit_return_type
-          explicit_return_type.union_with(implicit_return_type)
-        else
-          implicit_return_type
+        complete_return_type =
+          if explicit_return_type
+            explicit_return_type.union_with(implicit_return_type)
+          else
+            implicit_return_type
+          end
+
+        if return_restriction
+          unless return_restriction == complete_return_type
+            raise ReturnTypeMismatchError.new(return_restriction, complete_return_type)
+          end
         end
+
+        complete_return_type
       end
 
 
