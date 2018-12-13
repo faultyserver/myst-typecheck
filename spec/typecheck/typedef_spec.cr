@@ -84,4 +84,35 @@ describe "TypeDef" do
     bar_foo   = bar.scope["Foo"]
     base_foo.should_not eq(bar_foo)
   end
+
+
+  it "uses given supertypes to set inheritance" do
+    env, _ = typecheck(%q(
+      deftype Foo; end
+      deftype Bar : Foo; end
+    ))
+
+    env.current_scope.has_key?("Bar").should eq(true)
+    foo = env.current_scope["Foo"]
+    bar = env.current_scope["Bar"]
+    bar.super_type.should eq(foo)
+  end
+
+  # TODO: Currently not supported by the Myst parser
+  # it "understands namespacing of supertypes" do
+  #   env, _ = typecheck(%q(
+  #     deftype Foo; end
+  #     defmodule Bar;
+  #       deftype Foo; end
+  #     end
+
+  #     deftype Baz : Bar::Foo; end
+  #   ))
+
+  #   env.current_scope.has_key?("Baz").should eq(true)
+  #   baz = env.current_scope["Baz"]
+  #   bar = env.current_scope["Bar"]
+  #   bar_foo = bar.scope["Foo"]
+  #   baz.super_type.should eq(bar_foo)
+  # end
 end

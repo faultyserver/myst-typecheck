@@ -456,6 +456,12 @@ module Myst
 
       def visit(node : TypeDef)
         static = env.current_scope[node.name]
+        super_type =
+          if node.supertype?
+            visit(node.supertype)
+          end
+        __set_supertype(static, super_type)
+
         env.push_self(static)
         visit(node.body)
         env.pop_self
@@ -608,7 +614,7 @@ module Myst
         when {Type, UnionType}
           type2.includes?(type1)
         else
-          type1 == type2
+          type1.includes?(type2)
         end
       end
 

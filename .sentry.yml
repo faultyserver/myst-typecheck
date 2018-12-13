@@ -5,7 +5,7 @@
 # Typecheck every time any of the source files changes.
 display_name: typecheck specs
 info: true
-# `|| echo` makes sure that sentry keeps running even if there the specs fail.
+# `|| echo` makes sure that sentry keeps running even if the specs fail.
 build: crystal spec || echo ''
 run: echo ''
 watch:

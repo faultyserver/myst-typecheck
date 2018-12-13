@@ -9,9 +9,10 @@ module Myst
 
       property! static_type : Type?
       property! instance_type : Type?
+      property! super_type : Type?
 
 
-      def initialize(@name : String, @id : UInt64 = @@next_id, *, @static_type=nil, @instance_type=nil)
+      def initialize(@name : String, @id : UInt64 = @@next_id, *, @static_type=nil, @instance_type=nil, @super_type=nil)
         @scope = Scope.new
         @@next_id += 1
       end
@@ -22,6 +23,12 @@ module Myst
       def static_type; @static_type || self; end
       # Likewise for instance types.
       def instance_type; @instance_type || self; end
+
+      def ancestors
+        l = [self]
+        l.push(super_type) if super_type?
+        l
+      end
 
 
       # A type is considered instantiable if it has an `instance_type`. This is
@@ -45,7 +52,7 @@ module Myst
       end
 
       def includes?(other : Type)
-        self == other
+        other.ancestors.any?{ |t| t == self }
       end
 
       # Excluding a type from a singular type is non-sensical, and should never
@@ -105,11 +112,11 @@ module Myst
       end
 
       def includes?(other : Type)
-        types.includes?(other)
+        types.any?{ |t| t.includes?(other) }
       end
 
       def includes?(other : UnionType)
-        other.types.all?{ |t| types.includes?(t) }
+        other.types.all?{ |t| includes?(t) }
       end
 
       def_equals_and_hash types
