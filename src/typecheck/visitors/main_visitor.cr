@@ -372,48 +372,93 @@ module Myst
         result_union
       end
 
-
+      # TODO:
+      # Determine all available clauses for the Call by iterating through the
+      # ancestors of `receiver`.
+      #
+      # ALSO NEEDS:
+      # - FunctionCaptures must bind a value for `self` to use when looking up
+      #   ancestral functions.
+      # - Determine "permeability": whether a given ancestor's functor clauses
+      #   capture all possible calls to the function to stop iteration.
       private def visit_single_type_call(receiver, node)
-        env.push_self(receiver)
-        functor =
-          case name = node.name
-          when Node
-            f = visit(name)
-          else
-            f = env.current_scope[name]?
-            unless f
-              raise "No function with the name `#{name}` exists for type `#{receiver}`"
-            end
-
-            f
-          end
-
-        unless functor.is_a?(Functor)
-          raise "Expression for Call did not resolve to a Callable object (was #{f})"
-        end
-
         arguments = node.args.map{ |arg| visit(arg) }
         block = node.block? ? visit(node.block) : nil
 
-        clauses = matching_clauses_for_functor(functor, arguments, block)
+        clause_types =
+          receiver.ancestors.reduce([] of Type) do |acc, recv|
+            env.push_self(recv)
+            functor =
+              case name = node.name
+              when Node
+                f = visit(name)
+              else
+                f = env.current_scope[name]?
+                unless f
+                  raise "No function with the name `#{name}` exists for type `#{receiver}`"
+                end
 
-        if clauses.size == 0
+                f
+              end
+
+            unless functor.is_a?(Functor)
+              raise "Expression for Call did not resolve to a Callable object (was #{f})"
+            end
+
+            clauses = matching_clauses_for_functor(functor, arguments, block)
+
+            # The type result of a Call is the union type of all clauses that
+            # could match the given arguments.
+            types = clauses.map do |c|
+              env.push_scope()
+              assign_args(c, arguments, block)
+              return_restriction = c.return_type? ? visit(c.return_type).instance_type : nil
+              result = visit_clause(c.body, return_restriction)
+              env.pop_scope()
+              result
+            end
+
+            env.pop_self
+
+            acc.concat(types)
+          end
+
+
+        if clause_types.empty?
           raise "No matching clause for Call to #{node.name}"
         end
 
-        # The type result of a Call is the union type of all clauses that
-        # could match the given arguments.
-        clause_types = clauses.map do |c|
-          env.push_scope()
-          assign_args(c, arguments, block)
-          return_restriction = c.return_type? ? visit(c.return_type).instance_type : nil
-          result = visit_clause(c.body, return_restriction)
-          env.pop_scope()
-          result
-        end
-
-        env.pop_self
         clause_types
+      end
+
+      # Iterate the clauses of the given functor, attempting to match all of
+      # the given arguments. Returns the clauses that successfully match.
+      private def matching_clauses_for_functor(functor : Functor, arguments : Array(Type), block : Type?)
+        functor.clauses.select do |clause|
+          next unless clause.params.size == arguments.size
+
+          typed_params = clause.params.map do |param|
+            if param.restriction?
+              visit(param.restriction).instance_type
+            else
+              env.t_any
+            end
+          end
+
+          all_params_match =
+            typed_params.zip(arguments).all? do |(param, arg)|
+              types_overlap?(param, arg)
+            end
+
+          block_matches =
+            if clause.block_param?
+              !!block
+            else
+              !block
+            end
+
+          all_params_match && block_matches
+        end
       end
 
 
@@ -523,38 +568,6 @@ module Myst
       def visit(node : Next)
         node_type = visit(node.value)
         env.add_return_type(node_type)
-      end
-
-
-
-      # Iterate the clauses of the given functor, attempting to match all of
-      # the given arguments. Returns the clauses that successfully match.
-      private def matching_clauses_for_functor(functor : Functor, arguments : Array(Type), block : Type?)
-        functor.clauses.select do |clause|
-          next unless clause.params.size == arguments.size
-
-          typed_params = clause.params.map do |param|
-            if param.restriction?
-              visit(param.restriction).instance_type
-            else
-              env.t_any
-            end
-          end
-
-          all_params_match =
-            typed_params.zip(arguments).all? do |(param, arg)|
-              types_overlap?(param, arg)
-            end
-
-          block_matches =
-            if clause.block_param?
-              !!block
-            else
-              !block
-            end
-
-          all_params_match && block_matches
-        end
       end
 
 

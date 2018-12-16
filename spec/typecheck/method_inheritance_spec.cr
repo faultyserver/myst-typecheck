@@ -57,4 +57,7 @@ describe "Method Inheritance and Lookup" do
 
     %Foo{}.foo()
   ), "Integer"
+
+
+  # TODO: test captured functors resolving parent type clauses.
 end
